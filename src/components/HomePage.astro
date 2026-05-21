@@ -1,0 +1,239 @@
+---
+import { getCollection } from 'astro:content';
+import Hero from '~/components/Hero.astro';
+import SectionHeading from '~/components/SectionHeading.astro';
+import ProjectCard from '~/components/ProjectCard.astro';
+import PostCard from '~/components/PostCard.astro';
+import { useTranslations, type Lang } from '~/i18n';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const prefix = lang === 'zh-TW' ? '' : '/en';
+
+const allProjects = await getCollection('projects', (e) => e.data.lang === lang);
+const featuredProjects = allProjects
+  .filter((p) => p.data.featured)
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 3);
+
+const allPosts = await getCollection('blog', (e) => !e.data.draft && e.data.lang === lang);
+const recentPosts = allPosts
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 3);
+---
+
+<Hero lang={lang} />
+
+<section class="section">
+  <div class="wrap">
+    <SectionHeading
+      eyebrow={t('home.work.eyebrow')}
+      title={t('home.work.title')}
+      viewAll={{ label: t('home.work.viewAll'), href: `${base}${prefix}/work/` }}
+    />
+
+    <div class="card-list">
+      {
+        featuredProjects.length === 0 && (
+          <p class="empty">
+            {lang === 'zh-TW'
+              ? '案例正在整理中，敬請期待。'
+              : 'Case studies coming soon.'}
+          </p>
+        )
+      }
+      {
+        featuredProjects.map((p, i) => (
+          <ProjectCard
+            href={`${base}${prefix}/work/${p.data.slug}/`}
+            title={p.data.title}
+            summary={p.data.summary}
+            year={p.data.year}
+            role={p.data.role}
+            stack={p.data.stack}
+            number={String(i + 1).padStart(2, '0')}
+            lang={lang}
+          />
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<section class="section section-tinted">
+  <div class="wrap">
+    <SectionHeading
+      eyebrow={t('home.writing.eyebrow')}
+      title={t('home.writing.title')}
+      viewAll={{ label: t('home.writing.viewAll'), href: `${base}${prefix}/writing/` }}
+    />
+
+    <div class="card-list">
+      {
+        recentPosts.length === 0 && (
+          <p class="empty">
+            {lang === 'zh-TW'
+              ? '文章正在撰寫中。'
+              : 'Writing in progress.'}
+          </p>
+        )
+      }
+      {
+        recentPosts.map((post) => (
+          <PostCard
+            href={`${base}${prefix}/writing/${post.data.slug}/`}
+            title={post.data.title}
+            summary={post.data.summary}
+            date={post.data.date}
+            readTime={post.data.readTime}
+            tags={post.data.tags}
+            lang={lang}
+          />
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<section class="section about-block">
+  <div class="wrap">
+    <div class="about-grid">
+      <div class="about-content">
+        <p class="eyebrow">{t('home.about.eyebrow')}</p>
+        <h2 class="about-title">{t('home.about.title')}</h2>
+        <p class="about-body">{t('home.about.body')}</p>
+        <a class="about-link" href={`${base}${prefix}/about/`}>
+          {t('home.about.more')}
+        </a>
+      </div>
+
+      <div class="about-aside" aria-hidden="true">
+        <div class="aside-card">
+          <p class="aside-quote serif-italic">
+            “{lang === 'zh-TW'
+              ? '如果手動處理事情超過 10 秒，就寫腳本。'
+              : 'If a manual task takes more than 10 seconds, write a script.'}”
+          </p>
+          <p class="aside-attr">— {lang === 'zh-TW' ? '個人原則' : 'Personal rule'}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .section {
+    padding-block: var(--section-y);
+  }
+
+  .section-tinted {
+    background: var(--paper-tint);
+    border-block: 1px solid var(--rule);
+  }
+
+  .card-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .empty {
+    padding: 3rem 0;
+    color: var(--ink-faint);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--step-1);
+  }
+
+  /* About block */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  @media (min-width: 880px) {
+    .about-grid {
+      grid-template-columns: 3fr 2fr;
+      gap: 5rem;
+      align-items: start;
+    }
+  }
+
+  .about-content .eyebrow {
+    margin-bottom: 1rem;
+  }
+
+  .about-title {
+    font-family: var(--font-display);
+    font-size: var(--step-4);
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: 1.5rem;
+    max-width: 20ch;
+  }
+
+  .about-body {
+    font-size: var(--step-1);
+    color: var(--ink-soft);
+    line-height: 1.65;
+    margin-bottom: 1.5rem;
+    max-width: 56ch;
+  }
+
+  .about-link {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent);
+    padding-bottom: 2px;
+    transition: color var(--duration-base) var(--ease-out);
+  }
+
+  .about-link:hover {
+    color: var(--accent);
+  }
+
+  .aside-card {
+    padding: 2rem;
+    background: var(--paper-tint);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    position: relative;
+  }
+
+  .aside-card::before {
+    content: '"';
+    position: absolute;
+    top: -0.5rem;
+    left: 1.5rem;
+    font-family: var(--font-display);
+    font-size: 5rem;
+    line-height: 1;
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .aside-quote {
+    font-size: var(--step-2);
+    line-height: 1.35;
+    color: var(--ink);
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .aside-attr {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+</style>

@@ -1,0 +1,67 @@
+---
+interface Props {
+  eyebrow: string;
+  title: string;
+  viewAll?: { label: string; href: string };
+}
+
+const { eyebrow, title, viewAll } = Astro.props;
+---
+
+<header class="section-heading">
+  <div class="left">
+    <p class="eyebrow">{eyebrow}</p>
+    <h2 class="title">{title}</h2>
+  </div>
+  {
+    viewAll && (
+      <a class="view-all" href={viewAll.href}>
+        {viewAll.label}
+      </a>
+    )
+  }
+</header>
+
+<style>
+  .section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+  }
+
+  .left {
+    flex: 1 1 auto;
+  }
+
+  .eyebrow {
+    margin-bottom: 0.75rem;
+  }
+
+  .title {
+    font-family: var(--font-display);
+    font-size: var(--step-4);
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    max-width: 24ch;
+  }
+
+  .view-all {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink);
+    text-decoration: none;
+    padding-bottom: 2px;
+    border-bottom: 1px solid var(--rule);
+    transition: all var(--duration-base) var(--ease-out);
+    white-space: nowrap;
+  }
+
+  .view-all:hover {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+</style>

@@ -1,0 +1,95 @@
+---
+import { getCollection } from 'astro:content';
+import ProjectCard from '~/components/ProjectCard.astro';
+import { type Lang } from '~/i18n';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const prefix = lang === 'zh-TW' ? '' : '/en';
+
+const projects = (
+  await getCollection('projects', (e) => e.data.lang === lang)
+).sort((a, b) => a.data.order - b.data.order);
+
+const intro =
+  lang === 'zh-TW'
+    ? '選出幾個有故事的專案。每篇 case study 著重在架構決策與當時的取捨，而不只是技術名詞清單。'
+    : "A handful of projects with a story behind them. Each case study focuses on architectural decisions and trade-offs, not just a stack list.";
+const title = lang === 'zh-TW' ? '作品' : 'Work';
+const eyebrow = lang === 'zh-TW' ? '案例研究' : 'Case studies';
+---
+
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow rise">{eyebrow}</p>
+    <h1 class="page-title rise delay-1">{title}</h1>
+    <p class="page-intro rise delay-2">{intro}</p>
+  </div>
+</section>
+
+<section class="page-body">
+  <div class="wrap">
+    <div class="card-list">
+      {
+        projects.length === 0 && (
+          <p class="empty">
+            {lang === 'zh-TW' ? '即將公開。' : 'Coming soon.'}
+          </p>
+        )
+      }
+      {
+        projects.map((p, i) => (
+          <ProjectCard
+            href={`${base}${prefix}/work/${p.data.slug}/`}
+            title={p.data.title}
+            summary={p.data.summary}
+            year={p.data.year}
+            role={p.data.role}
+            stack={p.data.stack}
+            number={String(i + 1).padStart(2, '0')}
+            lang={lang}
+          />
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .page-head {
+    padding-top: clamp(3rem, 8vh, 5rem);
+    padding-bottom: clamp(2rem, 5vh, 4rem);
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-size: var(--step-5);
+    font-weight: 400;
+    letter-spacing: -0.035em;
+    margin-block: 0.75rem 1.5rem;
+  }
+
+  .page-intro {
+    font-size: var(--step-1);
+    color: var(--ink-soft);
+    max-width: 52ch;
+    line-height: 1.55;
+  }
+
+  .page-body {
+    padding-bottom: var(--section-y);
+  }
+
+  .empty {
+    padding: 4rem 0;
+    color: var(--ink-faint);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--step-2);
+    text-align: center;
+  }
+</style>

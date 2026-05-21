@@ -1,0 +1,229 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { useTranslations } from '~/i18n';
+
+export async function getStaticPaths() {
+  const posts = await getCollection(
+    'blog',
+    (e) => !e.data.draft && e.data.lang === 'zh-TW'
+  );
+  return posts.map((post) => ({
+    params: { slug: post.data.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const t = useTranslations('zh-TW');
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const dateStr = post.data.date.toLocaleDateString('zh-TW', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<BaseLayout
+  title={`${post.data.title} — Kano Hong`}
+  description={post.data.summary}
+  lang="zh-TW"
+>
+  <article class="post">
+    <header class="post-header wrap-narrow">
+      <a class="back" href={`${base}/writing/`}>{t('blog.back')}</a>
+
+      {post.data.series && (
+        <p class="series-label">
+          <span aria-hidden="true">⌗</span> {post.data.series}
+        </p>
+      )}
+
+      <h1 class="post-title">{post.data.title}</h1>
+
+      <p class="post-summary serif-italic">{post.data.summary}</p>
+
+      <div class="post-meta">
+        <time datetime={post.data.date.toISOString()}>{dateStr}</time>
+        {post.data.readTime && (
+          <>
+            <span class="dot">·</span>
+            <span>{post.data.readTime} {t('blog.readTime')}</span>
+          </>
+        )}
+      </div>
+
+      <hr class="header-rule" />
+    </header>
+
+    <div class="post-content wrap-narrow">
+      <div class="prose">
+        <Content />
+      </div>
+    </div>
+
+    {post.data.tags.length > 0 && (
+      <footer class="post-footer wrap-narrow">
+        <hr />
+        <p class="tags-label">{t('blog.tags')}</p>
+        <ul class="tags">
+          {post.data.tags.map((tag) => <li>#{tag}</li>)}
+        </ul>
+      </footer>
+    )}
+  </article>
+</BaseLayout>
+
+<style>
+  .post {
+    padding-top: clamp(2rem, 6vh, 4rem);
+    padding-bottom: var(--section-y);
+  }
+
+  .back {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    text-decoration: none;
+    margin-bottom: 2rem;
+    transition: color var(--duration-base) var(--ease-out);
+  }
+
+  .back:hover {
+    color: var(--accent);
+  }
+
+  .series-label {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 1rem;
+  }
+
+  .post-title {
+    font-family: var(--font-display);
+    font-size: var(--step-5);
+    font-weight: 400;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+    margin-bottom: 1.25rem;
+  }
+
+  .post-summary {
+    font-size: var(--step-2);
+    color: var(--ink-soft);
+    line-height: 1.4;
+    margin-bottom: 2rem;
+    max-width: 50ch;
+  }
+
+  .post-meta {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .dot {
+    margin-inline: 0.4rem;
+  }
+
+  .header-rule {
+    margin-top: 2.5rem;
+    margin-bottom: 0;
+  }
+
+  .post-content {
+    padding-top: 2.5rem;
+  }
+
+  /* Prose typography for MDX/MD content */
+  .prose :global(h2) {
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin-top: 3rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+  }
+
+  .prose :global(h3) {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 500;
+    margin-top: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .prose :global(p) {
+    font-size: var(--step-0);
+    line-height: 1.75;
+    color: var(--ink-soft);
+    margin-bottom: 1.25rem;
+  }
+
+  .prose :global(ul),
+  .prose :global(ol) {
+    padding-left: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .prose :global(li) {
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin-bottom: 0.4rem;
+  }
+
+  .prose :global(blockquote) {
+    margin: 2rem 0;
+    padding: 0.5rem 0 0.5rem 1.5rem;
+    border-left: 2px solid var(--accent);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--step-1);
+    color: var(--ink-soft);
+  }
+
+  .prose :global(pre) {
+    margin: 2rem 0;
+    padding: 1.25rem 1.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    overflow-x: auto;
+    font-size: var(--step--1);
+    line-height: 1.7;
+  }
+
+  .post-footer {
+    padding-top: 3rem;
+  }
+
+  .tags-label {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-faint);
+    margin-block: 1.5rem 0.75rem;
+  }
+
+  .tags {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .tags li {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+</style>

@@ -1,0 +1,112 @@
+---
+import { useTranslations, type Lang } from '~/i18n';
+
+interface Props {
+  href: string;
+  title: string;
+  summary: string;
+  date: Date;
+  readTime?: number;
+  tags?: string[];
+  lang: Lang;
+}
+
+const { href, title, summary, date, readTime, tags = [], lang } = Astro.props;
+const t = useTranslations(lang);
+
+const dateStr = date.toLocaleDateString(
+  lang === 'zh-TW' ? 'zh-TW' : 'en-US',
+  { year: 'numeric', month: 'short', day: 'numeric' }
+);
+---
+
+<a class="post-card" href={href}>
+  <article>
+    <div class="post-meta">
+      <time datetime={date.toISOString()}>{dateStr}</time>
+      {
+        readTime && (
+          <>
+            <span class="dot">·</span>
+            <span>
+              {readTime} {t('blog.readTime')}
+            </span>
+          </>
+        )
+      }
+    </div>
+
+    <h3 class="post-title">{title}</h3>
+
+    <p class="post-summary">{summary}</p>
+
+    {
+      tags.length > 0 && (
+        <ul class="post-tags">
+          {tags.slice(0, 3).map((tag) => (
+            <li>#{tag}</li>
+          ))}
+        </ul>
+      )
+    }
+  </article>
+</a>
+
+<style>
+  .post-card {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    padding: 1.75rem 0;
+    border-top: 1px solid var(--rule);
+    transition: all var(--duration-base) var(--ease-out);
+  }
+
+  .post-card:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .post-card:hover .post-title {
+    color: var(--accent);
+  }
+
+  .post-meta {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5rem;
+  }
+
+  .dot {
+    margin-inline: 0.4rem;
+  }
+
+  .post-title {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.6rem;
+    transition: color var(--duration-base) var(--ease-out);
+  }
+
+  .post-summary {
+    color: var(--ink-soft);
+    max-width: 60ch;
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+  }
+
+  .post-tags {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    color: var(--ink-faint);
+  }
+</style>

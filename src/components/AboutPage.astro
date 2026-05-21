@@ -1,0 +1,232 @@
+---
+import { type Lang } from '~/i18n';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+
+const title = lang === 'zh-TW' ? '關於我' : 'About';
+const eyebrow = lang === 'zh-TW' ? '個人介紹' : 'Bio';
+
+const intro =
+  lang === 'zh-TW'
+    ? '我是 Kano Hong（洪嘉濃），住在台灣彰化二林。前端工程師，遊戲產業十一年。'
+    : "I'm Kano Hong, based in Erlin, Changhua, Taiwan. Frontend engineer, eleven years in the game industry.";
+
+const story = lang === 'zh-TW'
+  ? [
+      '我從拉霸機台寫起，然後是德州撲克、麻將、輪盤、捕魚機——遊戲機房裡會出現的東西大概都做過了一輪。',
+      '這幾年我比較感興趣的，是把那些「每次新專案都要重新踩一遍的坑」變成可以重複使用的架構。子遊戲註冊機制、XState 狀態管理、MobX-Keystone 資料層、Figma 到 Cocos 的自動化 plugin——都是這個方向長出來的東西。',
+      '工作之外我會把日常流程寫成腳本。我的原則是：如果一件事手動做超過十秒鐘，就值得寫成自動化。',
+    ]
+  : [
+      'I started with slot machines, then Texas Hold\'em, mahjong, roulette, fishing games — most of what you\'d find in a game lobby, I\'ve shipped a version of.',
+      'These days I\'m most interested in turning "the same pitfall every new project hits" into reusable infrastructure: sub-game registries, XState state management, MobX-Keystone data layers, Figma-to-Cocos automation plugins — all branches of the same instinct.',
+      'Outside work I script my way through everyday tasks. My rule: if it takes more than ten seconds by hand, it deserves automation.',
+    ];
+
+const facts = lang === 'zh-TW'
+  ? [
+      { label: '現職', value: 'Front-end Lead / Cocos 主要負責人' },
+      { label: '公司', value: '新數字有限公司' },
+      { label: '位置', value: '台灣 · 彰化二林' },
+      { label: '經歷', value: '11 年遊戲產業 / 4 家公司' },
+      { label: '語言', value: '繁體中文（母語）· English' },
+    ]
+  : [
+      { label: 'Role', value: 'Front-end Lead / Cocos Primary' },
+      { label: 'Company', value: 'Newdigit Co., Ltd.' },
+      { label: 'Location', value: 'Erlin, Changhua, Taiwan' },
+      { label: 'Experience', value: '11 years across 4 companies' },
+      { label: 'Languages', value: 'Traditional Chinese (native) · English' },
+    ];
+
+const stack = [
+  'Cocos Creator', 'Cocos2d-x', 'TypeScript', 'XState', 'MobX-Keystone',
+  'MVVM', 'Vue.js (Vben)', '.NET 5+', 'Django', 'Docker', 'Nginx', 'Jenkins',
+  'Claude Code', 'GitHub Copilot',
+];
+
+const genresShipped = lang === 'zh-TW'
+  ? ['拉霸 Slot', '德州撲克 Texas Hold\'em', '麻將 Mahjong', '輪盤 Roulette', '捕魚機 Fishing']
+  : ['Slot', "Texas Hold'em", 'Mahjong', 'Roulette', 'Fishing'];
+---
+
+<section class="page-head">
+  <div class="wrap-narrow">
+    <p class="eyebrow rise">{eyebrow}</p>
+    <h1 class="page-title rise delay-1">{title}</h1>
+    <p class="lede rise delay-2 serif-italic">{intro}</p>
+  </div>
+</section>
+
+<section class="page-body">
+  <div class="wrap-narrow">
+    <div class="prose-block">
+      {story.map((p) => <p>{p}</p>)}
+    </div>
+
+    <hr />
+
+    <div class="facts">
+      <h2 class="block-heading">{lang === 'zh-TW' ? '一些基本資訊' : 'At a glance'}</h2>
+      <dl>
+        {facts.map((f) => (
+          <div class="fact-row">
+            <dt>{f.label}</dt>
+            <dd>{f.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+
+    <hr />
+
+    <div class="genres">
+      <h2 class="block-heading">{lang === 'zh-TW' ? '出過貨的遊戲類型' : 'Genres shipped'}</h2>
+      <ul class="genre-list">
+        {genresShipped.map((g) => <li>{g}</li>)}
+      </ul>
+    </div>
+
+    <hr />
+
+    <div class="stack-block">
+      <h2 class="block-heading">{lang === 'zh-TW' ? '日常工具' : 'Daily tools'}</h2>
+      <ul class="stack-list">
+        {stack.map((s) => <li>{s}</li>)}
+      </ul>
+    </div>
+
+    <hr />
+
+    <div class="contact-block">
+      <h2 class="block-heading">{lang === 'zh-TW' ? '聯絡' : 'Get in touch'}</h2>
+      <p>
+        {lang === 'zh-TW'
+          ? '工作機會、合作邀請、技術討論都歡迎。'
+          : "Open to work opportunities, collaborations, and technical discussions."}
+      </p>
+      <ul class="contact-list">
+        {/* TODO: 替換成你實際的 email 與 LinkedIn URL */}
+        <li><a href="mailto:hello@example.com">hello@example.com</a></li>
+        <li><a href="https://github.com/kanohong" target="_blank" rel="noopener noreferrer">github.com/kanohong</a></li>
+        <li><a href="https://linkedin.com/in/kanohong" target="_blank" rel="noopener noreferrer">linkedin.com/in/kanohong</a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .page-head {
+    padding-top: clamp(3rem, 8vh, 5rem);
+    padding-bottom: clamp(2rem, 5vh, 4rem);
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-size: var(--step-5);
+    font-weight: 400;
+    letter-spacing: -0.035em;
+    margin-block: 0.75rem 1.5rem;
+  }
+
+  .lede {
+    font-size: var(--step-2);
+    color: var(--ink-soft);
+    line-height: 1.4;
+    max-width: 30ch;
+  }
+
+  .page-body {
+    padding-bottom: var(--section-y);
+  }
+
+  .prose-block p {
+    font-size: var(--step-1);
+    line-height: 1.65;
+    color: var(--ink-soft);
+    max-width: 56ch;
+  }
+
+  .prose-block p + p {
+    margin-top: 1.25em;
+  }
+
+  .block-heading {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 1.25rem;
+  }
+
+  .facts dl {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .fact-row {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .fact-row dt {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .fact-row dd {
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .genre-list,
+  .stack-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .genre-list li,
+  .stack-list li {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    padding: 0.35em 0.85em;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--paper-tint);
+    color: var(--ink-soft);
+  }
+
+  .genre-list li {
+    border-color: var(--accent-tint);
+    background: var(--accent-tint);
+    color: var(--accent-deep);
+  }
+
+  .contact-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .contact-list a {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink);
+  }
+</style>

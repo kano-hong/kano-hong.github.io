@@ -1,0 +1,271 @@
+---
+import { useTranslations, type Lang } from '~/i18n';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+const prefix = lang === 'zh-TW' ? '' : '/en';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+// 顯示用「現在時間」當作小裝飾元素 — 強化編輯感
+const now = new Date();
+const utcOffset = '+08:00';
+const localTime = now.toLocaleString(lang === 'zh-TW' ? 'zh-TW' : 'en-US', {
+  timeZone: 'Asia/Taipei',
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+});
+---
+
+<section class="hero">
+  <div class="wrap hero-inner">
+    <p class="hero-eyebrow eyebrow rise">{t('hero.eyebrow')}</p>
+
+    <h1 class="hero-title">
+      <span class="hero-line rise delay-1">{t('hero.title.line1')}</span>
+      <span class="hero-line hero-line-italic rise delay-2">
+        <em>{t('hero.title.line2')}</em>
+      </span>
+      <span class="hero-line rise delay-3">{t('hero.title.line3')}</span>
+    </h1>
+
+    <p class="hero-subtitle prose rise delay-4">
+      {t('hero.subtitle')}
+    </p>
+
+    <div class="hero-cta rise delay-5">
+      <a class="btn btn-primary" href={`${base}${prefix}/work/`}>
+        {t('hero.cta.work')}
+        <span aria-hidden="true">→</span>
+      </a>
+      <a class="btn btn-ghost" href={`${base}${prefix}/writing/`}>
+        {t('hero.cta.writing')}
+      </a>
+    </div>
+
+    <aside class="hero-aside fade delay-5" aria-hidden="true">
+      <div class="aside-row">
+        <span class="aside-label">LOC</span>
+        <span class="aside-value">
+          {lang === 'zh-TW' ? '台灣 · 彰化二林' : 'Erlin · Changhua, Taiwan'}
+        </span>
+      </div>
+      <div class="aside-row">
+        <span class="aside-label">TIME</span>
+        <span class="aside-value">{localTime} UTC{utcOffset}</span>
+      </div>
+      <div class="aside-row">
+        <span class="aside-label">YRS</span>
+        <span class="aside-value">
+          11 {lang === 'zh-TW' ? '年遊戲產業' : 'yrs in games'}
+        </span>
+      </div>
+    </aside>
+  </div>
+
+  <!-- decorative numerals -->
+  <div class="hero-numerals" aria-hidden="true">
+    <span class="num">01</span>
+    <span class="num-label">{lang === 'zh-TW' ? '序章' : 'prologue'}</span>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    padding-block: clamp(4rem, 12vh, 8rem) clamp(4rem, 10vh, 7rem);
+    overflow: hidden;
+  }
+
+  /* Decorative top-rule */
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: var(--gutter);
+    right: var(--gutter);
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .hero-inner {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .hero-eyebrow {
+    margin-bottom: 1rem;
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: var(--step-6);
+    font-weight: 400;
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+    margin-bottom: 2rem;
+    max-width: 16ch;
+  }
+
+  .hero-line {
+    display: block;
+  }
+
+  .hero-line-italic em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 400;
+  }
+
+  .hero-subtitle {
+    font-size: var(--step-1);
+    color: var(--ink-soft);
+    line-height: 1.55;
+    max-width: 48ch;
+    margin-bottom: 2.5rem;
+    /* override line-height in TW */
+  }
+
+  :root[lang^='zh'] .hero-subtitle,
+  html[lang^='zh'] .hero-subtitle {
+    font-family: var(--font-tc);
+    font-size: var(--step-0);
+    line-height: 1.75;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 4rem;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    padding: 0.85rem 1.4rem;
+    border-radius: 999px;
+    text-decoration: none;
+    transition: all var(--duration-base) var(--ease-out);
+    border: 1px solid transparent;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .btn-primary:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .btn-primary:hover span {
+    transform: translateX(3px);
+  }
+
+  .btn-primary span {
+    display: inline-block;
+    transition: transform var(--duration-base) var(--ease-out);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--rule);
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--ink);
+    background: var(--paper-tint);
+  }
+
+  /* Aside — meta info ticker style */
+  .hero-aside {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+    max-width: 36rem;
+  }
+
+  @media (min-width: 720px) {
+    .hero-aside {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+  }
+
+  .aside-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .aside-label {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-faint);
+  }
+
+  .aside-value {
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    color: var(--ink);
+  }
+
+  /* Big decorative chapter numeral */
+  .hero-numerals {
+    position: absolute;
+    top: 1.5rem;
+    right: var(--gutter);
+    text-align: right;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .num {
+    display: block;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(3rem, 8vw, 6rem);
+    line-height: 1;
+    color: var(--accent);
+    opacity: 0.85;
+    letter-spacing: -0.04em;
+  }
+
+  .num-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-top: 0.25rem;
+  }
+
+  @media (max-width: 720px) {
+    .hero-numerals {
+      opacity: 0.5;
+    }
+    .num {
+      font-size: 2.5rem;
+    }
+  }
+</style>

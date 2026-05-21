@@ -1,0 +1,157 @@
+---
+import {
+  useTranslations,
+  switchLangPath,
+  type Lang,
+} from '~/i18n';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const homePath = lang === 'zh-TW' ? `${base}/` : `${base}/en/`;
+const prefix = lang === 'zh-TW' ? base : `${base}/en`;
+
+const currentPath = Astro.url.pathname;
+const otherLang: Lang = lang === 'zh-TW' ? 'en' : 'zh-TW';
+const switchPath = switchLangPath(currentPath, otherLang);
+
+const navItems = [
+  { href: `${prefix}/work/`, key: 'nav.work' as const },
+  { href: `${prefix}/writing/`, key: 'nav.writing' as const },
+  { href: `${prefix}/about/`, key: 'nav.about' as const },
+];
+---
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a href={homePath} class="brand" aria-label="Kano Hong — home">
+      <span class="brand-mark">K.</span>
+      <span class="brand-name">Kano Hong</span>
+    </a>
+
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        {
+          navItems.map((item) => (
+            <li>
+              <a href={item.href}>{t(item.key)}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <a class="lang-switch" href={switchPath} aria-label={`Switch to ${otherLang}`}>
+      {t('lang.switch')}
+    </a>
+  </div>
+  <div class="header-rule" aria-hidden="true"></div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    backdrop-filter: saturate(140%) blur(8px);
+    -webkit-backdrop-filter: saturate(140%) blur(8px);
+  }
+
+  .header-inner {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 2rem;
+    padding-block: 1.1rem;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    color: var(--ink);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--step-0);
+    letter-spacing: -0.01em;
+  }
+
+  .brand-mark {
+    color: var(--accent);
+    font-style: italic;
+    font-weight: 600;
+  }
+
+  .brand-name {
+    font-feature-settings: 'ss01';
+  }
+
+  @media (max-width: 540px) {
+    .brand-name {
+      display: none;
+    }
+  }
+
+  .site-nav {
+    justify-self: center;
+  }
+
+  .site-nav ul {
+    display: flex;
+    gap: clamp(1rem, 3vw, 2.25rem);
+    list-style: none;
+  }
+
+  .site-nav a {
+    color: var(--ink-soft);
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.02em;
+    text-transform: lowercase;
+    text-decoration: none;
+    padding-block: 0.25rem;
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+  }
+
+  .site-nav a:hover {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+
+  .lang-switch {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+    text-decoration: none;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    transition: all var(--duration-fast) var(--ease-out);
+  }
+
+  .lang-switch:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-tint);
+  }
+
+  .header-rule {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--rule) 20%,
+      var(--rule) 80%,
+      transparent 100%
+    );
+  }
+</style>

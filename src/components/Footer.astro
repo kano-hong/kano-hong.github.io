@@ -1,0 +1,138 @@
+---
+import { useTranslations, type Lang } from '~/i18n';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+const links = [
+  { label: 'GitHub', href: 'https://github.com/kanohong' },
+  // TODO: 替換成你實際的 LinkedIn URL
+  { label: 'LinkedIn', href: 'https://linkedin.com/in/kanohong' },
+  // TODO: 替換成你實際的 email
+  { label: 'Email', href: 'mailto:hello@example.com' },
+];
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div class="footer-left">
+      <p class="tagline serif-italic">{t('footer.tagline')}</p>
+    </div>
+
+    <div class="footer-right">
+      <p class="eyebrow">{t('footer.elsewhere')}</p>
+      <ul class="elsewhere">
+        {
+          links.map((l) => (
+            <li>
+              <a
+                href={l.href}
+                target={l.href.startsWith('http') ? '_blank' : undefined}
+                rel={l.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+              >
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+
+  <div class="wrap colophon">
+    <span>© {year} Kano Hong (洪嘉濃)</span>
+    <span>{t('footer.colophon')}</span>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: var(--section-y);
+    padding-top: 3rem;
+    padding-bottom: 2rem;
+    border-top: 1px solid var(--rule);
+    background: var(--paper-tint);
+  }
+
+  .footer-inner {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 3rem;
+    padding-block: 1rem 2rem;
+  }
+
+  @media (max-width: 640px) {
+    .footer-inner {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .tagline {
+    font-size: var(--step-2);
+    color: var(--ink-soft);
+    max-width: 24ch;
+    line-height: 1.3;
+  }
+
+  .footer-right .eyebrow {
+    margin-bottom: 1rem;
+  }
+
+  .elsewhere {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .elsewhere a {
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    text-decoration: none;
+    position: relative;
+    padding-right: 1.2rem;
+  }
+
+  .elsewhere a::after {
+    content: '↗';
+    position: absolute;
+    right: 0;
+    top: 0;
+    color: var(--ink-faint);
+    font-family: var(--font-body);
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+
+  .elsewhere a:hover {
+    color: var(--accent);
+  }
+
+  .elsewhere a:hover::after {
+    transform: translate(2px, -2px);
+    color: var(--accent);
+  }
+
+  .colophon {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 640px) {
+    .colophon {
+      flex-direction: column;
+    }
+  }
+</style>

@@ -1,0 +1,401 @@
+/* ============================================================
+   Design Tokens — Technical Chronicle
+   --------------------------------------------------------------
+   Editorial + Technical aesthetic.
+   Paper-white canvas, charcoal text, single warm accent.
+   ============================================================ */
+
+@import '@fontsource/fraunces/400.css';
+@import '@fontsource/fraunces/400-italic.css';
+@import '@fontsource/fraunces/500.css';
+@import '@fontsource/fraunces/600.css';
+@import '@fontsource/fraunces/600-italic.css';
+@import '@fontsource/fraunces/700.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/700.css';
+@import '@fontsource/noto-sans-tc/400.css';
+@import '@fontsource/noto-sans-tc/500.css';
+@import '@fontsource/noto-sans-tc/700.css';
+
+:root {
+  /* Colors — paper, ink, accent */
+  --paper: #f5f1ea;
+  --paper-deep: #ebe5da;
+  --paper-tint: #faf7f1;
+  --ink: #1a1814;
+  --ink-soft: #3a352d;
+  --ink-faint: #6b6359;
+  --rule: #d4cdc0;
+  --rule-soft: #e2dccf;
+
+  /* Single signature accent — molten orange */
+  --accent: #d94e1f;
+  --accent-deep: #a83a14;
+  --accent-tint: #f7e4d9;
+
+  /* Semantic */
+  --link: var(--accent);
+  --bg: var(--paper);
+  --fg: var(--ink);
+
+  /* Typography */
+  --font-display: 'Fraunces', 'Noto Serif TC', Georgia, serif;
+  --font-body:
+    'Fraunces', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:
+    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-tc: 'Noto Sans TC', sans-serif;
+
+  /* Scale — modular, generous */
+  --step--2: clamp(0.78rem, 0.76rem + 0.10vw, 0.84rem);
+  --step--1: clamp(0.94rem, 0.91rem + 0.13vw, 1.00rem);
+  --step-0: clamp(1.13rem, 1.09rem + 0.18vw, 1.20rem);
+  --step-1: clamp(1.35rem, 1.30rem + 0.27vw, 1.50rem);
+  --step-2: clamp(1.62rem, 1.54rem + 0.40vw, 1.88rem);
+  --step-3: clamp(1.94rem, 1.82rem + 0.59vw, 2.34rem);
+  --step-4: clamp(2.33rem, 2.16rem + 0.86vw, 2.93rem);
+  --step-5: clamp(2.80rem, 2.55rem + 1.24vw, 3.66rem);
+  --step-6: clamp(3.36rem, 3.01rem + 1.77vw, 4.58rem);
+
+  /* Layout */
+  --measure: 68ch;
+  --measure-wide: 84ch;
+  --gutter: clamp(1.25rem, 4vw, 2.5rem);
+  --section-y: clamp(4rem, 10vh, 8rem);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 180ms;
+  --duration-base: 320ms;
+  --duration-slow: 600ms;
+}
+
+/* ============================================================
+   Reset & base
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.65;
+  font-feature-settings: 'ss01', 'ss02', 'kern';
+  /* subtle paper grain via repeating gradient — no images */
+  background-image:
+    radial-gradient(
+      circle at 20% 30%,
+      rgba(217, 78, 31, 0.012) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 70%,
+      rgba(26, 24, 20, 0.015) 0%,
+      transparent 50%
+    );
+}
+
+/* Selection */
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--step-5);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+
+h2 {
+  font-size: var(--step-4);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+}
+
+h3 {
+  font-size: var(--step-2);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+h4 {
+  font-size: var(--step-1);
+  font-weight: 500;
+}
+
+/* Italic display style for editorial accents */
+.serif-italic {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* Paragraph & text */
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Lists */
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+}
+
+/* Code */
+code,
+pre,
+kbd {
+  font-family: var(--font-mono);
+  font-feature-settings: 'liga' 0;
+}
+
+:not(pre) > code {
+  font-size: 0.92em;
+  padding: 0.12em 0.4em;
+  background: var(--paper-deep);
+  border-radius: 3px;
+  color: var(--ink);
+}
+
+pre {
+  overflow-x: auto;
+  padding: 1.25rem 1.5rem;
+  border-radius: 4px;
+  font-size: var(--step--1);
+  line-height: 1.7;
+  border: 1px solid var(--rule);
+}
+
+/* Horizontal rules */
+hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 3rem 0;
+}
+
+/* Blockquote */
+blockquote {
+  margin: 2rem 0;
+  padding-left: 1.5rem;
+  border-left: 2px solid var(--accent);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: var(--step-1);
+  color: var(--ink-soft);
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ============================================================
+   Layout primitives
+   ============================================================ */
+
+.wrap {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.wrap-narrow {
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.prose {
+  max-width: var(--measure);
+}
+
+.prose > * + * {
+  margin-top: 1.25em;
+}
+
+.prose h2 {
+  margin-top: 2.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose h3 {
+  margin-top: 2em;
+  margin-bottom: 0.4em;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.5em;
+}
+
+.prose li + li {
+  margin-top: 0.3em;
+}
+
+/* Stack */
+.stack > * + * {
+  margin-top: var(--space, 1rem);
+}
+
+/* ============================================================
+   Reusable components
+   ============================================================ */
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--ink-faint);
+  font-weight: 500;
+}
+
+.rule {
+  display: block;
+  height: 1px;
+  background: var(--rule);
+  margin-block: 2rem;
+}
+
+.rule-accent {
+  display: block;
+  height: 2px;
+  width: 3rem;
+  background: var(--accent);
+  margin-block: 1.5rem;
+}
+
+.tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  padding: 0.25em 0.7em;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink-soft);
+  background: var(--paper-tint);
+}
+
+.tag-accent {
+  color: var(--accent-deep);
+  border-color: var(--accent-tint);
+  background: var(--accent-tint);
+}
+
+/* ============================================================
+   Animations — used sparingly, on page entry only
+   ============================================================ */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.2rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.rise {
+  animation: rise var(--duration-slow) var(--ease-out) both;
+}
+
+.fade {
+  animation: fade var(--duration-slow) var(--ease-out) both;
+}
+
+/* Stagger helpers */
+.delay-1 {
+  animation-delay: 80ms;
+}
+.delay-2 {
+  animation-delay: 160ms;
+}
+.delay-3 {
+  animation-delay: 240ms;
+}
+.delay-4 {
+  animation-delay: 320ms;
+}
+.delay-5 {
+  animation-delay: 400ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   Focus visibility
+   ============================================================ */
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
