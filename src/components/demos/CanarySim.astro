@@ -1,0 +1,221 @@
+---
+// 互動 demo：8 台遊戲伺服器的金絲雀換版，以及資料庫斷線時「修正前／修正後」的差別。
+// 數字取自實際紀錄：有效設定 37 項不變、換版後 ERROR 每萬筆約 1.6、5xx 為 0。
+---
+
+<figure class="canary" data-canary>
+  <div class="bar">
+    <button type="button" data-act="release">換版 v4.5.6</button>
+    <button type="button" data-act="drop">模擬資料庫斷線</button>
+    <label><input type="checkbox" data-fixed checked /> 已修正斷線缺陷（v4.5.5 起）</label>
+  </div>
+  <ol class="hosts" data-hosts></ol>
+  <ul class="log" data-log aria-live="polite"></ul>
+  <figcaption>
+    換版先換 1 台，跟其他 7 台在同一段時間比較回應與錯誤，沒問題才換剩下的。把「已修正」取消，再模擬一次斷線，就是缺陷修好之前的樣子。
+  </figcaption>
+</figure>
+
+<script>
+  type Host = { ver: string; state: 'ok' | 'canary' | 'swap' | 'down' | 'retry' };
+
+  document.querySelectorAll<HTMLElement>('[data-canary]').forEach((root) => {
+    const list = root.querySelector<HTMLElement>('[data-hosts]')!;
+    const log = root.querySelector<HTMLElement>('[data-log]')!;
+    const fixed = root.querySelector<HTMLInputElement>('[data-fixed]')!;
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-act]')];
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, still ? Math.min(ms, 900) : ms));
+    let hosts: Host[] = Array.from({ length: 8 }, () => ({ ver: 'v4.5.5', state: 'ok' }));
+    let restarts = 0;
+
+    const LABEL = { ok: '正常', canary: '金絲雀', swap: '換版中', down: '崩潰', retry: '重連中' };
+    function render() {
+      list.innerHTML = '';
+      hosts.forEach((h, i) => {
+        const li = document.createElement('li');
+        li.className = h.state;
+        li.innerHTML = '<b></b><span></span><small></small>';
+        li.querySelector('b')!.textContent = `#${i + 1}`;
+        li.querySelector('span')!.textContent = h.ver;
+        li.querySelector('small')!.textContent = LABEL[h.state];
+        list.append(li);
+      });
+    }
+    function say(text: string, kind = '') {
+      const li = document.createElement('li');
+      li.textContent = text;
+      if (kind) li.className = kind;
+      log.prepend(li);
+      while (log.children.length > 5) log.lastElementChild!.remove();
+    }
+    const busy = (on: boolean) => buttons.forEach((b) => (b.disabled = on));
+
+    async function release() {
+      busy(true);
+      const next = hosts[0].ver === 'v4.5.6' ? 'v4.5.5' : 'v4.5.6';
+      say(`準備 ${next}：在本機打包，伺服器斷網建好映像，比對有效設定 37 項不變`);
+      await sleep(1400);
+      hosts[0] = { ver: next, state: 'swap' }; render(); await sleep(700);
+      hosts[0].state = 'canary'; render();
+      say('先換 1 台當金絲雀，和其他 7 台比較同一段時間的回應與錯誤類型');
+      await sleep(1600);
+      say('金絲雀 ERROR 每萬筆約 1.6，與其他 7 台同級，沒有新的錯誤類型 → 繼續', 'good');
+      await sleep(900);
+      for (let i = 1; i < 8; i++) {
+        hosts[i] = { ver: next, state: 'swap' }; render(); await sleep(350);
+        hosts[i].state = 'ok'; render();
+      }
+      hosts[0].state = 'ok'; render();
+      say(`8 台都是 ${next}；1 小時後複查日誌、監控、Nginx 狀態碼：5xx 為 0`, 'good');
+      busy(false);
+    }
+
+    async function drop() {
+      busy(true);
+      say('資料庫在同一毫秒切斷 8 台的連線', 'bad');
+      if (!fixed.checked) {
+        await sleep(600);
+        hosts = hosts.map((h) => ({ ...h, state: 'down' })); render();
+        restarts += 8;
+        say('沒人接住的 rejection → 行程結束（exit 7）→ 8 台一起崩潰', 'bad');
+        await sleep(1800);
+        hosts = hosts.map((h) => ({ ...h, state: 'ok' })); render();
+        say(`容器自動重啟，約 11 秒恢復；進行中的下注沒有回應（累計重啟 ${restarts} 次）`, 'bad');
+      } else {
+        await sleep(600);
+        hosts = hosts.map((h) => ({ ...h, state: 'retry' })); render();
+        say('錯誤被接住，連線池自己重連');
+        await sleep(1800);
+        hosts = hosts.map((h) => ({ ...h, state: 'ok' })); render();
+        say(`全部恢復，0 次重啟（累計重啟 ${restarts} 次）`, 'good');
+      }
+      busy(false);
+    }
+
+    root.querySelector('[data-act="release"]')!.addEventListener('click', release);
+    root.querySelector('[data-act="drop"]')!.addEventListener('click', drop);
+    render();
+  });
+</script>
+
+<style>
+  .canary {
+    margin: 2rem 0;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--paper-tint);
+  }
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin-bottom: 1rem;
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+  .bar button {
+    font: inherit;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--ink-soft);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .bar button:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .bar button:disabled {
+    color: var(--ink-faint);
+    border-color: var(--rule);
+    cursor: default;
+  }
+  .bar input {
+    accent-color: var(--accent);
+  }
+  .canary .hosts {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 0.5rem;
+  }
+  .hosts :global(li) {
+    margin: 0;
+    display: grid;
+    gap: 0.1rem;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--paper);
+    font-size: var(--step--2);
+    color: var(--ink-soft);
+    transition: all var(--duration-base) var(--ease-out);
+  }
+  .hosts :global(b) {
+    font-family: var(--font-mono);
+    color: var(--ink-faint);
+    font-weight: 400;
+  }
+  .hosts :global(span) {
+    font-family: var(--font-mono);
+    color: var(--ink);
+  }
+  .hosts :global(li.canary) {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-tint);
+  }
+  .hosts :global(li.swap) {
+    opacity: 0.45;
+  }
+  .hosts :global(li.retry) {
+    border-style: dashed;
+    border-color: var(--ink-soft);
+  }
+  .hosts :global(li.down) {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .hosts :global(li.down span) {
+    color: var(--paper);
+  }
+  .canary .log {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    min-height: 4rem;
+    display: grid;
+    gap: 0.35rem;
+    font-size: var(--step--1);
+  }
+  .log :global(li) {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+  .log :global(li:first-child) {
+    color: var(--ink);
+  }
+  .log :global(li.good)::before {
+    content: '✓ ';
+    color: var(--accent);
+  }
+  .log :global(li.bad)::before {
+    content: '✕ ';
+    color: var(--accent-deep);
+  }
+  figcaption {
+    margin-top: 1rem;
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hosts :global(li) {
+      transition: none;
+    }
+  }
+</style>
