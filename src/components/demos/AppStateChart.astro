@@ -1,0 +1,220 @@
+---
+// 互動 demo：平台的頂層狀態機（簡化版）。點事件看狀態怎麼走、子遊戲怎麼從註冊表取出，
+// 並可切換「遊戲／k6 壓測」兩套實作，對照同一份定義在兩邊做的事。
+---
+
+<figure class="chart" data-chart>
+  <div class="impl" role="radiogroup" aria-label="實作">
+    <span>實作：</span>
+    <label><input type="radio" name="impl" value="client" checked /> 遊戲</label>
+    <label><input type="radio" name="impl" value="k6" /> k6 壓測</label>
+  </div>
+
+  <ol class="nodes">
+    <li data-node="loading">載入</li>
+    <li data-node="login">登入</li>
+    <li data-node="lobby">大廳</li>
+    <li data-node="game">遊戲<small data-game></small></li>
+    <li data-node="reconnecting" class="side">重連中</li>
+  </ol>
+
+  <div class="events" data-events></div>
+
+  <ul class="log" data-log aria-live="polite"></ul>
+  <figcaption>
+    灰掉的按鈕代表目前狀態不接受這個事件。狀態機的好處就在這裡：不該發生的轉換，根本寫不出來。
+  </figcaption>
+</figure>
+
+<script>
+  type State = 'loading' | 'login' | 'lobby' | 'game' | 'reconnecting';
+  type Impl = 'client' | 'k6';
+
+  // 註冊表裡的子遊戲（通用名稱）
+  const GAMES = ['輪盤', '百人德州', '炸金花', '牛牛'];
+
+  // 每個事件：哪些狀態接受、去哪、兩套實作各做什麼
+  const EVENTS: {
+    id: string;
+    label: string;
+    from: State[];
+    to: (s: Ctx) => State;
+    effect: Record<Impl, string>;
+    game?: string;
+  }[] = [
+    { id: 'loaded', label: '載入完成', from: ['loading'], to: () => 'login',
+      effect: { client: '資源載完，切到登入場景', k6: '跳過資源載入' } },
+    { id: 'login', label: '登入成功', from: ['login'], to: () => 'lobby',
+      effect: { client: '切到大廳場景', k6: '記錄登入耗時' } },
+    ...GAMES.map((g) => ({
+      id: `enter-${g}`, label: `進入${g}`, game: g, from: ['lobby'] as State[], to: () => 'game' as State,
+      effect: {
+        client: `registry.get(${g}) 取出狀態機、訊息處理器、資料模型 → 顯示 loading、送進桌請求`,
+        k6: `registry.get(${g}) → 等 50 ms 模擬網路、記錄 log`,
+      },
+    })),
+    { id: 'leave', label: '離開遊戲', from: ['game'], to: () => 'lobby',
+      effect: { client: '清掉這款遊戲的資料模型，回大廳', k6: '記錄離桌' } },
+    { id: 'disconnect', label: '斷線', from: ['lobby', 'game'], to: () => 'reconnecting',
+      effect: { client: 'app.reconnecting：顯示重連提示', k6: 'app.reconnecting：記錄斷線' } },
+    { id: 'reconnected', label: '重連成功', from: ['reconnecting'], to: (c) => c.prev,
+      effect: { client: '重新登入；原本在牌桌就用上一桌的遊戲與房間 ID 重新進桌 → app.reconnected', k6: 'app.reconnected：繼續原本的流程' } },
+    { id: 'fail', label: '重連失敗', from: ['reconnecting'], to: () => 'login',
+      effect: { client: '重新登入失敗 → app.backToLogin：清掉遊戲資料，回登入頁', k6: 'app.backToLogin：重新登入' } },
+  ];
+
+  const NAMES: Record<State, string> = { loading: '載入', login: '登入', lobby: '大廳', game: '遊戲', reconnecting: '重連中' };
+
+  interface Ctx { state: State; prev: State; game: string; impl: Impl }
+
+  document.querySelectorAll<HTMLElement>('[data-chart]').forEach((root) => {
+    const ctx: Ctx = { state: 'loading', prev: 'lobby', game: '', impl: 'client' };
+    const eventsEl = root.querySelector<HTMLElement>('[data-events]')!;
+    const logEl = root.querySelector<HTMLElement>('[data-log]')!;
+    const gameEl = root.querySelector<HTMLElement>('[data-game]')!;
+
+    const buttons = EVENTS.map((ev) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = ev.label;
+      b.addEventListener('click', () => {
+        const from = ctx.state;
+        if (ev.id === 'disconnect') ctx.prev = from;
+        if (ev.game) ctx.game = ev.game;
+        ctx.state = ev.to(ctx);
+        if (ctx.state === 'lobby' || ctx.state === 'login') ctx.game = '';
+        const li = document.createElement('li');
+        li.innerHTML = `<b></b><span></span>`;
+        li.querySelector('b')!.textContent = `${ev.label}：${NAMES[from]} → ${NAMES[ctx.state]}`;
+        li.querySelector('span')!.textContent = ev.effect[ctx.impl];
+        logEl.prepend(li);
+        while (logEl.children.length > 4) logEl.lastElementChild!.remove();
+        render();
+      });
+      eventsEl.append(b);
+      return b;
+    });
+
+    root.querySelectorAll<HTMLInputElement>('input[name="impl"]').forEach((r) =>
+      r.addEventListener('change', () => { ctx.impl = r.value as Impl; }),
+    );
+
+    function render() {
+      root.querySelectorAll<HTMLElement>('[data-node]').forEach((n) =>
+        n.classList.toggle('on', n.dataset.node === ctx.state),
+      );
+      gameEl.textContent = ctx.game;
+      EVENTS.forEach((ev, i) => (buttons[i].disabled = !ev.from.includes(ctx.state)));
+    }
+    render();
+  });
+</script>
+
+<style>
+  .chart {
+    margin: 2rem 0;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--paper-tint);
+  }
+  .impl {
+    display: flex;
+    gap: 1rem;
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+    margin-bottom: 1rem;
+  }
+  .impl input {
+    accent-color: var(--accent);
+  }
+  /* 加上 .chart 前綴，蓋過文章 .prose ol/ul/li 的縮排與間距 */
+  .chart .nodes {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    counter-reset: none;
+  }
+  .chart .nodes li {
+    margin: 0;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--paper);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    transition: all var(--duration-base) var(--ease-out);
+  }
+  .chart .nodes li.side {
+    border-style: dashed;
+  }
+  .chart .nodes li.on {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--paper);
+  }
+  .nodes small {
+    margin-left: 0.35rem;
+  }
+  .events {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+  }
+  .events :global(button) {
+    font: inherit;
+    font-size: var(--step--1);
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--ink-soft);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .events :global(button:hover:not(:disabled)) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .events :global(button:disabled) {
+    border-color: var(--rule);
+    color: var(--ink-faint);
+    cursor: not-allowed;
+  }
+  .chart .log {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    min-height: 3rem;
+    display: grid;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+  }
+  .chart .log :global(li) {
+    margin: 0;
+    display: grid;
+    gap: 0.15rem;
+    color: var(--ink-soft);
+  }
+  .chart .log :global(li:first-child b) {
+    color: var(--accent);
+  }
+  .log :global(b) {
+    font-weight: 500;
+    color: var(--ink);
+  }
+  figcaption {
+    margin-top: 1rem;
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .chart .nodes li {
+      transition: none;
+    }
+  }
+</style>

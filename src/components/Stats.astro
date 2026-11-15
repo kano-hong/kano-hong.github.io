@@ -1,0 +1,44 @@
+---
+// 案例開頭的關鍵數字：大字數值＋一行說明。
+interface Props {
+  items: { value: string; label: string }[];
+}
+const { items } = Astro.props;
+---
+
+<dl class="stats">
+  {items.map((s) => (
+    <div>
+      <dt>{s.value}</dt>
+      <dd>{s.label}</dd>
+    </div>
+  ))}
+</dl>
+
+<style>
+  .stats {
+    margin: 2rem 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--rule);
+    overflow: hidden;
+  }
+  .stats div {
+    padding: 1rem 1.25rem;
+    background: var(--paper-tint);
+  }
+  dt {
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    line-height: 1.1;
+    color: var(--accent);
+  }
+  dd {
+    margin: 0.35rem 0 0;
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+</style>
