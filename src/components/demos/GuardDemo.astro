@@ -1,0 +1,140 @@
+---
+// 互動 demo：危險指令攔截 hook 的範例。判斷結果是用真正的 hook（guard-danger.py）離線跑出來的，
+// 資料在 src/data/guard-samples.json；訊息拿掉了事故日期等細節。
+import samples from '~/data/guard-samples.json';
+const LABEL = { deny: '擋下', ask: '先問我', allow: '放行' } as const;
+---
+
+<figure class="guard" data-guard>
+  <ul class="picks">
+    {samples.map((s, i) => (
+      <li>
+        <button type="button" data-i={i} class={s.decision} aria-pressed={i === 0 ? 'true' : 'false'}>
+          <span class="dot" />{s.label}
+        </button>
+      </li>
+    ))}
+  </ul>
+  {samples.map((s, i) => (
+    <div class="verdict" data-v={i} hidden={i !== 0}>
+      <pre><code>$ {s.cmd}</code></pre>
+      <p class={`badge ${s.decision}`}>{LABEL[s.decision as keyof typeof LABEL]}{s.rule && <small>{s.rule}</small>}</p>
+      {s.why && <p class="why">{s.why}</p>}
+    </div>
+  ))}
+  <figcaption>
+    每一條的結果都是把指令交給真正的 hook 判斷得到的（指令不會真的執行）。紅點會被擋下，黃點會先問我，綠點是改寫後會放行的安全寫法。
+  </figcaption>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-guard]').forEach((root) => {
+    const btns = [...root.querySelectorAll<HTMLButtonElement>('[data-i]')];
+    const views = [...root.querySelectorAll<HTMLElement>('[data-v]')];
+    btns.forEach((b) =>
+      b.addEventListener('click', () => {
+        btns.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        views.forEach((v) => (v.hidden = v.dataset.v !== b.dataset.i));
+      }),
+    );
+  });
+</script>
+
+<style>
+  .guard {
+    margin: 2rem 0;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--paper-tint);
+  }
+  .guard .picks {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .guard .picks li {
+    margin: 0;
+  }
+  .picks button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font: inherit;
+    font-size: var(--step--1);
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--paper);
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .picks button[aria-pressed='true'] {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: var(--ink-faint);
+  }
+  .deny .dot {
+    background: #c0392b;
+  }
+  .ask .dot {
+    background: #d4a017;
+  }
+  .allow .dot {
+    background: #2e8b57;
+  }
+  .verdict pre {
+    margin: 0 0 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    background: #161b22;
+    color: #e6edf3;
+    font-size: var(--step--1);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0 0 0.5rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 3px;
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: #fff;
+  }
+  .badge small {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    opacity: 0.85;
+  }
+  .badge.deny {
+    background: #c0392b;
+  }
+  .badge.ask {
+    background: #b8860b;
+  }
+  .badge.allow {
+    background: #2e8b57;
+  }
+  .why {
+    margin: 0;
+    font-size: var(--step--1);
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+  figcaption {
+    margin-top: 1rem;
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+</style>
