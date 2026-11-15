@@ -52,11 +52,13 @@ const stack = [
 const clips = lang === 'zh-TW'
   ? [
       { src: '/videos/showcase-holdem-web.mp4', poster: '/videos/showcase-holdem-web.jpg', caption: '德州撲克 Web／PWA：大廳 → 公開局列表 → 切換幣別 → 進入系統桌觀賽（UAT 錄影，測試帳號）' },
+      { src: '/videos/showcase-holdem-hand.mp4', poster: '/videos/showcase-holdem-hand.jpg', caption: '德州撲克 Web／PWA 一手牌：開桌 → 發牌 → 輪到我行動 → 結算（本機預覽搭配 MSW mock 資料，不是真實牌局）' },
       { src: '/videos/showcase-subgames.mp4', poster: '/videos/showcase-subgames.jpg', caption: '子遊戲平台：從百人遊戲列表進入百人德州，發牌、開始下注、倒數（UAT 實錄，沒有下注）' },
       { src: '/videos/showcase-tg-miniapp.mp4', poster: '/videos/showcase-tg-miniapp.jpg', caption: 'Telegram Mini App 版：大廳 → 牌桌 → 切換牌桌主題（staging 實錄，帳號名稱已模糊）' },
     ]
   : [
       { src: '/videos/showcase-holdem-web.mp4', poster: '/videos/showcase-holdem-web.jpg', caption: 'Texas Hold’em web / PWA: lobby → public tables → switch currency → watch a system table (UAT recording, test account)' },
+      { src: '/videos/showcase-holdem-hand.mp4', poster: '/videos/showcase-holdem-hand.jpg', caption: 'A hand of Texas Hold’em on web / PWA: open a table → deal → my turn → settle (local preview with MSW mock data, not a real game)' },
       { src: '/videos/showcase-subgames.mp4', poster: '/videos/showcase-subgames.jpg', caption: 'Sub-game platform: from the list into 100-player Hold’em — deal, betting opens, countdown (UAT recording, no bets placed)' },
       { src: '/videos/showcase-tg-miniapp.mp4', poster: '/videos/showcase-tg-miniapp.jpg', caption: 'Telegram Mini App edition: lobby → table → switching table themes (staging recording, account name blurred)' },
     ];
@@ -100,8 +102,8 @@ const genresShipped = lang === 'zh-TW'
       <h2 class="block-heading">{lang === 'zh-TW' ? '近期做的產品' : 'Recent products'}</h2>
       <p class="clips-intro">
         {lang === 'zh-TW'
-          ? '我帶團隊做的三個前端，都已上線；以下錄自測試環境，只錄遊戲畫面。'
-          : 'Three front-ends my team built, all in production. Recorded on test environments, game screen only.'}
+          ? '我帶團隊做的三個前端，都已上線；以下錄自測試環境與本機預覽，只錄遊戲畫面。'
+          : 'Three front-ends my team built, all in production. Recorded on test environments and a local preview, game screen only.'}
       </p>
       <div class="clips">
         {clips.map((c) => <Video src={c.src} poster={c.poster} caption={c.caption} />)}
@@ -277,9 +279,15 @@ const genresShipped = lang === 'zh-TW'
 
   .clips {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
     align-items: start;
+  }
+
+  @media (max-width: 640px) {
+    .clips {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 
   .clips :global(figure) {
