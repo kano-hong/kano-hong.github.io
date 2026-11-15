@@ -1,5 +1,6 @@
 ---
 import { type Lang } from '~/i18n';
+import Video from '~/components/Video.astro';
 
 interface Props {
   lang: Lang;
@@ -50,6 +51,18 @@ const stack = [
   'Prometheus / Grafana', 'ELK', 'Python', 'Claude Code · MCP',
 ];
 
+const clips = lang === 'zh-TW'
+  ? [
+      { src: '/videos/showcase-holdem-web.mp4', poster: '/videos/showcase-holdem-web.jpg', caption: '德州撲克 Web／PWA：大廳 → 快速開桌 → 開桌設定（UAT 實錄，測試帳號）' },
+      { src: '/videos/showcase-subgames.mp4', poster: '/videos/showcase-subgames.jpg', caption: '子遊戲平台：從百人遊戲列表進入百人德州，發牌、開始下注、倒數（UAT 實錄，沒有下注）' },
+      { src: '/videos/showcase-tg-miniapp.mp4', poster: '/videos/showcase-tg-miniapp.jpg', caption: 'Telegram Mini App 版：大廳 → 牌桌 → 切換牌桌主題（staging 實錄，帳號名稱已模糊）' },
+    ]
+  : [
+      { src: '/videos/showcase-holdem-web.mp4', poster: '/videos/showcase-holdem-web.jpg', caption: 'Texas Hold’em web / PWA: lobby → quick table → table settings (UAT recording, test account)' },
+      { src: '/videos/showcase-subgames.mp4', poster: '/videos/showcase-subgames.jpg', caption: 'Sub-game platform: from the list into 100-player Hold’em — deal, betting opens, countdown (UAT recording, no bets placed)' },
+      { src: '/videos/showcase-tg-miniapp.mp4', poster: '/videos/showcase-tg-miniapp.jpg', caption: 'Telegram Mini App edition: lobby → table → switching table themes (staging recording, account name blurred)' },
+    ];
+
 const timeline = lang === 'zh-TW'
   ? [
       { when: '2024.02 – 至今', where: '新數字有限公司（XGaming）', role: 'Front-end Tech Lead', what: '帶約 10 人的 Cocos 團隊，負責德州撲克的 Web／PWA、原生 App、Telegram Mini App 與子遊戲平台；2026 年起兼管 CI/CD 與正式環境維運。' },
@@ -81,6 +94,20 @@ const genresShipped = lang === 'zh-TW'
   <div class="wrap-narrow">
     <div class="prose-block">
       {story.map((p) => <p>{p}</p>)}
+    </div>
+
+    <hr />
+
+    <div class="clips-block">
+      <h2 class="block-heading">{lang === 'zh-TW' ? '近期做的產品' : 'Recent products'}</h2>
+      <p class="clips-intro">
+        {lang === 'zh-TW'
+          ? '我帶團隊做的三個前端，都已上線；以下錄自測試環境，只錄遊戲畫面。'
+          : 'Three front-ends my team built, all in production. Recorded on test environments, game screen only.'}
+      </p>
+      <div class="clips">
+        {clips.map((c) => <Video src={c.src} poster={c.poster} caption={c.caption} />)}
+      </div>
     </div>
 
     <hr />
@@ -243,6 +270,26 @@ const genresShipped = lang === 'zh-TW'
     border-color: var(--accent-tint);
     background: var(--accent-tint);
     color: var(--accent-deep);
+  }
+
+  .clips-intro {
+    color: var(--ink-soft);
+    margin-bottom: 0.5rem;
+  }
+
+  .clips {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .clips :global(figure) {
+    margin: 0.5rem 0 0;
+  }
+
+  .clips :global(figcaption) {
+    font-size: var(--step--1);
   }
 
   .timeline ol {
