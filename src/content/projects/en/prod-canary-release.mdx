@@ -1,0 +1,92 @@
+---
+title: 'Real-money releases in production: an 8-server canary and zero 5xx after each release'
+summary: A slot platform's Node.js game servers, 8 of them in production, handling real players' bets. I turned releases into a repeatable canary process and fixed the bug that made all 8 crash together whenever the database dropped.
+year: '2026'
+role: Front-end Tech Lead (also running production ops)
+company: Newdigit Co., Ltd. (XGaming)
+stack:
+  - Node.js
+  - Docker Compose
+  - MongoDB
+  - Nginx
+  - Prometheus / Grafana
+  - ELK
+  - Python
+tags:
+  - Operations
+  - Production
+  - Reliability
+featured: true
+order: 3
+lang: en
+slug: prod-canary-release
+---
+
+import Stats from '~/components/Stats.astro';
+import CanarySim from '~/components/demos/CanarySim.astro';
+import Video from '~/components/Video.astro';
+
+<Stats
+  items={[
+    { value: '5', label: 'manual canary releases, zero 5xx afterwards' },
+    { value: '8 → 0', label: 'servers crashing when the database drops' },
+    { value: '22–44 → 4–5', label: 'database connections per server' },
+    { value: '37', label: 'effective settings compared on every release' },
+  ]}
+/>
+
+<Video
+  src="/videos/grafana-prod.mp4"
+  poster="/videos/grafana-prod.jpg"
+  caption="Production Grafana (read-only recording, last 24 hours): first the CPU, event loop and memory of the 8 game servers, with 0 restarts; then health checks for all 8, with 0% failed probes."
+/>
+
+## The problem
+
+In October 2026 this slot platform's game servers moved from K8s to a single Docker host: 8 game-server containers on one production machine, with every spin touching a player's wallet. When I took over operations there were two problems:
+
+- **No set way to release.** Every release was a real-money change, without a procedure that could be repeated and verified.
+- **When the database dropped, all 8 crashed.** When the database cut every connection in the same millisecond, all 8 containers exited and restarted, and bets in flight got no response. It happened twice in October.
+
+## My role
+
+The back-end lead maintains the server code. I owned production releases and monitoring, and found and fixed the root cause of the crashes. I wrote the release tools and check scripts with Claude Code; see "[AI-assisted engineering](../ai-assisted-engineering/)".
+
+## Decision 1: break the release into repeatable steps
+
+Every release follows the same process, written up as a skill to run again next time:
+
+1. **Pack on my machine**: `git archive` plus a sha256 manifest of every file. New npm packages are included only after their sha512 is checked against the lockfile, and no install scripts run. If the lockfile changes or removes packages, stop: no improvised image builds on the production machine.
+2. **Build the image on the production machine with the network off, and compare effective settings**: compare, item by item, the settings the old and new images actually read. Continue only if all 37 are unchanged.
+3. **Swap 1 server as the canary**: over the same window, compare its response counts, error types and infrastructure errors with the other 7.
+4. **Swap the other 7**, with host alerts paused during the swap and the baseline reset afterwards.
+5. **One-hour check**: logs (after vs. before vs. the same hour yesterday), container state, Prometheus, Nginx status codes and the alert channel.
+
+<CanarySim lang="en" />
+
+## Decision 2: find the real cause of the crash
+
+After the late-October crash, some suspected a Docker config change made that day. I checked the host first: dockerd hadn't restarted, only the 8 game servers had exited, and the system log's millisecond order was "database disconnect → process exit → Docker tears down the network". That ruled out the host and Docker.
+
+The real cause was in the code. Database calls were wrapped as `await new Promise(async (resolve) => resolve(await op))`, in 16 places. When the call failed, the error became a rejection nobody handled, and a math library (emscripten output) had registered "throw on any unhandled rejection", so the process simply exited. That is also why the global error handler couldn't stop it. On top of that, startup didn't retry when the database was unreachable.
+
+The fix turned those 16 places into ordinary async functions so errors reach the caller, and added a startup retry. Before shipping, I reproduced it locally with the same MongoDB and Node.js versions and the same library loaded, stopped the database for 40 seconds, and confirmed the fixed version no longer exits.
+
+A week after the fix went live, the database dropped again. This time: **0 restarts**.
+
+## Decision 3: monitoring should answer "what just happened?"
+
+- **Host alerts**: my own systemd timer, running on 8 machines across production and the data center, posting to Lark. After the late-October crash, everyone believed there had been "no restart alert"; it had actually been buried in a summary card. Now any container restart gets its own red alert. From v2 to v8.2, its automated tests grew from 25 to 215.
+- **Application metrics**: the game servers export Prometheus metrics into Grafana. Nearly a hundred services across production, UAT and Stage are wired in, with alert rules.
+
+## Results
+
+- **5 manual canary releases** (v4.5.2 to v4.5.8), with zero Nginx 5xx after each. After two of them, ERRORs per 10,000 were 1.7 and 1.55.
+- **Database drops no longer crash the servers**: at the next drop after the fix, 0 restarts.
+- **Database connections per server went from 22–44 to 4–5.**
+
+## What I learned
+
+- **With real money, every step must be able to turn back.** Building offline, comparing settings and swapping one server first are all there to stop before something breaks, not to roll back after it does.
+- **When all 8 die together, suspect what they share.** Ending in the same millisecond is unlikely to be 8 independent bugs. Sort the events by time once and you see who moved first.
+- **Alerts must be explicit.** A restart buried in a summary is no alert at all.

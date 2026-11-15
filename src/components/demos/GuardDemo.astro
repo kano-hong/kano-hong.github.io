@@ -2,7 +2,15 @@
 // 互動 demo：危險指令攔截 hook 的範例。判斷結果是用真正的 hook（guard-danger.py）離線跑出來的，
 // 資料在 src/data/guard-samples.json；訊息拿掉了事故日期等細節。
 import samples from '~/data/guard-samples.json';
-const LABEL = { deny: '擋下', ask: '先問我', allow: '放行' } as const;
+interface Props { lang?: 'zh-TW' | 'en' }
+const { lang = 'zh-TW' } = Astro.props;
+const en = lang === 'en';
+const LABEL = en
+  ? { deny: 'Blocked', ask: 'Asks first', allow: 'Allowed' }
+  : { deny: '擋下', ask: '先問我', allow: '放行' };
+const caption = en
+  ? 'Every verdict here came from handing the command to the real hook (nothing was actually run). Red is blocked, yellow asks me first, green is the safe rewrite the hook lets through. The hook speaks Chinese; its messages are translated here.'
+  : '每一條的結果都是把指令交給真正的 hook 判斷得到的（指令不會真的執行）。紅點會被擋下，黃點會先問我，綠點是改寫後會放行的安全寫法。';
 ---
 
 <figure class="guard" data-guard>
@@ -10,7 +18,7 @@ const LABEL = { deny: '擋下', ask: '先問我', allow: '放行' } as const;
     {samples.map((s, i) => (
       <li>
         <button type="button" data-i={i} class={s.decision} aria-pressed={i === 0 ? 'true' : 'false'}>
-          <span class="dot" />{s.label}
+          <span class="dot" />{en ? s.labelEn : s.label}
         </button>
       </li>
     ))}
@@ -19,12 +27,10 @@ const LABEL = { deny: '擋下', ask: '先問我', allow: '放行' } as const;
     <div class="verdict" data-v={i} hidden={i !== 0}>
       <pre><code>$ {s.cmd}</code></pre>
       <p class={`badge ${s.decision}`}>{LABEL[s.decision as keyof typeof LABEL]}{s.rule && <small>{s.rule}</small>}</p>
-      {s.why && <p class="why">{s.why}</p>}
+      {s.why && <p class="why">{en ? s.whyEn : s.why}</p>}
     </div>
   ))}
-  <figcaption>
-    每一條的結果都是把指令交給真正的 hook 判斷得到的（指令不會真的執行）。紅點會被擋下，黃點會先問我，綠點是改寫後會放行的安全寫法。
-  </figcaption>
+  <figcaption>{caption}</figcaption>
 </figure>
 
 <script>

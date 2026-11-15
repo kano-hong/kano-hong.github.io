@@ -4,83 +4,107 @@
   "cmd": "docker ps -q --filter name=gameserver | xargs docker rm -f",
   "decision": "deny",
   "rule": "batch-rm",
-  "why": "容器 ID 來自過濾結果（xargs 或 $(...)）。`docker ps -q` 會讓 `--format` 失效，名稱過濾不生效。先 `docker ps --format '{{.Names}}'` 看過，再 `docker rm -f <明確名稱>`；探測容器用 `docker run --rm`。"
+  "why": "容器 ID 來自過濾結果（xargs 或 $(...)）。`docker ps -q` 會讓 `--format` 失效，名稱過濾不生效。先 `docker ps --format '{{.Names}}'` 看過，再 `docker rm -f <明確名稱>`；探測容器用 `docker run --rm`。",
+  "labelEn": "Incident version: batch-remove containers from a filter result",
+  "whyEn": "The container IDs come from a filter result (xargs or $(...)). `docker ps -q` makes `--format` ineffective, so the name filter doesn't apply. List them first with `docker ps --format '{{.Names}}'`, then `docker rm -f <explicit names>`; for probe containers use `docker run --rm`."
  },
  {
   "label": "改用明確名稱",
   "cmd": "docker rm -f gameserver-1 gameserver-2",
   "decision": "allow",
   "rule": null,
-  "why": null
+  "why": null,
+  "labelEn": "Use explicit names",
+  "whyEn": null
  },
  {
   "label": "事故寫法：用 grep -v 濾掉密碼行",
   "cmd": "grep -v PASSWORD .env",
   "decision": "deny",
   "rule": "secret-file",
-  "why": "這個指令會把機密檔（*.pem／.env）印進對話。連線方式已寫在 CLAUDE.md 和 skill，通常不必讀這個檔。改成只印 key（`| cut -d= -f1`），或交給 python 解析後只印白名單欄位（host、port、db），或只輸出布林／長度。真的要看值，請使用者自己用 `!` 執行。"
+  "why": "這個指令會把機密檔（*.pem／.env）印進對話。連線方式已寫在 CLAUDE.md 和 skill，通常不必讀這個檔。改成只印 key（`| cut -d= -f1`），或交給 python 解析後只印白名單欄位（host、port、db），或只輸出布林／長度。真的要看值，請使用者自己用 `!` 執行。",
+  "labelEn": "Incident version: drop password lines with grep -v",
+  "whyEn": "This would print a secrets file (*.pem / .env) into the conversation. Connection details are already in CLAUDE.md and the skills, so you rarely need this file. Print only the keys (`| cut -d= -f1`), or parse it in Python and print only allow-listed fields (host, port, db), or output just a boolean or a length. If you really need the value, ask the user to run it themselves with `!`."
  },
  {
   "label": "只數筆數",
   "cmd": "grep -c DB_HOST .env",
   "decision": "allow",
   "rule": null,
-  "why": null
+  "why": null,
+  "labelEn": "Count lines only",
+  "whyEn": null
  },
  {
   "label": "值存進變數、不印出",
   "cmd": "TOKEN=$(grep API_TOKEN .env | cut -d= -f2)",
   "decision": "allow",
   "rule": null,
-  "why": null
+  "why": null,
+  "labelEn": "Keep the value in a variable, never print it",
+  "whyEn": null
  },
  {
   "label": "範本檔",
   "cmd": "cat .env.example",
   "decision": "allow",
   "rule": null,
-  "why": null
+  "why": null,
+  "labelEn": "The example file",
+  "whyEn": null
  },
  {
   "label": "整份環境變數",
   "cmd": "docker exec api env",
   "decision": "deny",
   "rule": "env-dump",
-  "why": "這會印出整份環境變數，像 NODE_CONFIG 這種一整行 JSON 會把帳密一起帶出來。查連線目標看 `/proc/<pid>/net/tcp`。改成只印 key（`| cut -d= -f1`），或交給 python 解析後只印白名單欄位（host、port、db），或只輸出布林／長度。真的要看值，請使用者自己用 `!` 執行。"
+  "why": "這會印出整份環境變數，像 NODE_CONFIG 這種一整行 JSON 會把帳密一起帶出來。查連線目標看 `/proc/<pid>/net/tcp`。改成只印 key（`| cut -d= -f1`），或交給 python 解析後只印白名單欄位（host、port、db），或只輸出布林／長度。真的要看值，請使用者自己用 `!` 執行。",
+  "labelEn": "The whole environment",
+  "whyEn": "This prints the whole environment; a one-line JSON variable such as NODE_CONFIG drags credentials out with it. To find a connection target, read `/proc/<pid>/net/tcp`. Print only the keys (`| cut -d= -f1`), or parse it in Python and print only allow-listed fields (host, port, db), or output just a boolean or a length. If you really need the value, ask the user to run it themselves with `!`."
  },
  {
   "label": "只印 key",
   "cmd": "docker exec api env | cut -d= -f1",
   "decision": "allow",
   "rule": null,
-  "why": null
+  "why": null,
+  "labelEn": "Print keys only",
+  "whyEn": null
  },
  {
   "label": "事故寫法：JSON 用 tr 拆開再去值",
   "cmd": "docker inspect api --format '{{json .Config.Env}}' | tr ',' '\\n' | sed 's/=.*//'",
   "decision": "deny",
   "rule": "env-dump",
-  "why": "這會印出整份環境變數，像 NODE_CONFIG 這種一整行 JSON 會把帳密一起帶出來。查連線目標看 `/proc/<pid>/net/tcp`。改成只印 key（`| cut -d= -f1`），或交給 python 解析後只印白名單欄位（host、port、db），或只輸出布林／長度。真的要看值，請使用者自己用 `!` 執行。"
+  "why": "這會印出整份環境變數，像 NODE_CONFIG 這種一整行 JSON 會把帳密一起帶出來。查連線目標看 `/proc/<pid>/net/tcp`。改成只印 key（`| cut -d= -f1`），或交給 python 解析後只印白名單欄位（host、port、db），或只輸出布林／長度。真的要看值，請使用者自己用 `!` 執行。",
+  "labelEn": "Incident version: split JSON with tr, then strip values",
+  "whyEn": "This prints the whole environment; a one-line JSON variable such as NODE_CONFIG drags credentials out with it. To find a connection target, read `/proc/<pid>/net/tcp`. Print only the keys (`| cut -d= -f1`), or parse it in Python and print only allow-listed fields (host, port, db), or output just a boolean or a length. If you really need the value, ask the user to run it themselves with `!`."
  },
  {
   "label": "交給 python 只取 key",
   "cmd": "docker inspect api --format '{{json .Config.Env}}' | python3 -c 'import json,sys; print([e.split(\"=\")[0] for e in json.load(sys.stdin)])'",
   "decision": "allow",
   "rule": null,
-  "why": null
+  "why": null,
+  "labelEn": "Let Python pick out the keys",
+  "whyEn": null
  },
  {
   "label": "刪 volume",
   "cmd": "docker compose down -v",
   "decision": "ask",
   "rule": "data-loss",
-  "why": "`compose down -v` 會刪掉 volume（資料庫資料）。確認是可丟棄的測試專案再放行。"
+  "why": "`compose down -v` 會刪掉 volume（資料庫資料）。確認是可丟棄的測試專案再放行。",
+  "labelEn": "Delete volumes",
+  "whyEn": "`compose down -v` deletes volumes (database data). Allow it only after confirming this is a disposable test project."
  },
  {
   "label": "清理映像與容器",
   "cmd": "docker system prune -f",
   "decision": "ask",
   "rule": "data-loss",
-  "why": "prune 會刪掉停止的容器、volume 或回滾用的舊映像。確認這台不是 prod／UAT 再放行；清建置快取用 `docker builder prune`。"
+  "why": "prune 會刪掉停止的容器、volume 或回滾用的舊映像。確認這台不是 prod／UAT 再放行；清建置快取用 `docker builder prune`。",
+  "labelEn": "Clean up images and containers",
+  "whyEn": "prune removes stopped containers, volumes, or old images kept for rollback. Allow it only after confirming this machine isn't prod or UAT; to clear the build cache use `docker builder prune`."
  }
 ]

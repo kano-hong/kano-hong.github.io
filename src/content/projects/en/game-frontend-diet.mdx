@@ -1,0 +1,107 @@
+---
+title: 'Slimming a game front end: GPU memory −92%, first visit 65 → 14 MB'
+summary: A real-time Texas Hold'em game running in mobile browsers. Players overseas said the first load was slow, and iPhones lost their WebGL context after a while. I started by measuring, then took on textures, fonts, protocol code and precaching one at a time.
+year: '2026'
+role: Front-end Tech Lead
+company: Newdigit Co., Ltd. (XGaming)
+stack:
+  - Cocos Creator 3.8
+  - Basis Universal 2.50
+  - ASTC
+  - Workbox
+  - protobufjs
+  - Python
+tags:
+  - Performance
+  - WebGL
+  - PWA
+featured: true
+order: 0
+lang: en
+slug: game-frontend-diet
+---
+
+import BeforeAfter from '~/components/BeforeAfter.astro';
+import TextureMemory from '~/components/demos/TextureMemory.astro';
+
+<BeforeAfter
+  caption="GPU memory and load time: a real Android phone (Adreno 660), the same table scene, 3 runs per variant with Chrome force-stopped between runs. Download size: first visit on staging."
+  rows={[
+    { label: 'GPU texture memory', before: 492.56, after: 40.52, text: '492.56 → 40.52 MB' },
+    { label: 'First-visit download', before: 65.25, after: 13.96, text: '65.25 → 13.96 MB' },
+    { label: 'Font file', before: 10.07, after: 2.63, text: '10.07 → 2.63 MB' },
+    { label: 'Generated protocol code', before: 7900, after: 232, text: '7.9 MB → 232 KB' },
+    { label: 'Table load time (vs. the previous ETC1S build)', before: 11134, after: 7238, text: '11,134 → 7,238 ms' },
+  ]}
+/>
+
+## The problem
+
+This poker game runs in mobile browsers and as a PWA. At the time there were two kinds of reports:
+
+- **Players overseas said the first load was slow.**
+- **iPhones lost their WebGL context after a while of play**, and the only way out was a reload.
+
+They look unrelated, but both pointed to the same thing: we were sending phones too much, both in download size over the network and in memory on the GPU.
+
+## My role
+
+I did the analysis and the implementation, and led the measurement method, the fixes and the verification.
+
+## Decision 1: a small download is not small GPU memory
+
+Our textures were WebP. WebP files are small, but GPUs can't read WebP: the browser first decodes each image to RGBA8 at 4 bytes per pixel and uploads that. Download size and GPU memory are two different numbers.
+
+The fix was Basis Universal: files are transcoded at runtime into a GPU-compressed format the device supports, and they stay compressed on the GPU. The first version used ETC1S (1 byte per pixel); later I moved to XUASTC 8×8 from Basis Universal 2.50 (0.25 byte per pixel). Images that lose too much quality (PSNR below 30 dB) fall back to UASTC automatically, so one build carries two ASTC block sizes. The loader no longer hard-codes a transcode target; it asks per file which format to produce. If there is no matching format it throws, rather than hand the engine data with the wrong block size and draw a texture that is silently broken.
+
+Try the numbers yourself:
+
+<TextureMemory lang="en" />
+
+Measured on a real phone, same table scene:
+
+<BeforeAfter
+  rows={[
+    { label: 'Version 1: WebP → ETC1S', before: 492.56, after: 123.55, text: '492.56 → 123.55 MB' },
+    { label: 'Version 2: WebP → XUASTC 8×8', before: 492.56, after: 40.52, text: '492.56 → 40.52 MB' },
+  ]}
+  caption="Chrome's total memory (PSS) with the XUASTC build is another 16% lower than with ETC1S, and it loads 35% faster; after brotli the two download about the same. 780 transcodes, 0 failures."
+/>
+
+## Decision 2: find the one thing that grows without limit
+
+Compression shrank GPU memory, but "the screen goes black after a long session" is not necessarily about the total. It is more likely something that keeps growing. One player's report showed texture memory climbing from 37 MB to 184 MB, after which the iPhone lost its WebGL context.
+
+I measured item by item on a staging table and found the only source with no upper bound: a popup created a new instance every time it opened, but its close button only hid it, so the old copy stayed under the screen and every open added 1.84 MB of textures. After switching to a single reused instance, the first open adds 1.83 MB and the next four add 0.
+
+I also measured long sessions on real devices: the table holds 60 fps, with no thermal throttling over 70 minutes.
+
+## Decision 3: parse less at startup
+
+Besides downloading, the first load spends time parsing JavaScript and fonts.
+
+- **Font subsetting**: the original Noto font had 30,894 glyphs, 6,582 of them in CJK Extension A, which the project never used. I kept GB2312 level 1, common Big5 and JIS X 0208 level 1, plus every character actually used in 23 locale files and in all prefabs and scenes: 8,955 glyphs. The file went from 10.07 MB to 2.63 MB and the transfer from 6.0 MB to 1.6 MB, and not a single existing string lost a character; anything outside the subset falls back to the system font one character at a time.
+- **Protocol code**: 318 Protobuf messages were generated with protobufjs's static-module target, which writes dedicated encode and decode code for every message. That was 7.9 MB of source, most of the game bundle, all of it parsed at startup whether it was used or not. I switched to emitting only the schema description (json-module) and letting protobufjs build the same codecs at runtime: the generated code dropped to 232 KB and module initialization got 2.1× faster. I compared all 371 exported symbols with the old build one by one, and the encoded bytes and JSON output are identical.
+
+## Decision 4: don't download what a first visit won't use
+
+The main site preloads the table in a background iframe. Measuring it showed that every new visitor had downloaded about 66 MB before ever opening a table:
+
+- The Service Worker precached 3,664 files, 61.5 MB of them the game bundle, and it fetched both the `.basis` and the `.webp` version of every image, although a device only ever uses one.
+- The background preload loaded all 8 table themes at once, because the player's choice isn't known until the server settings come back.
+
+The fix: precache only the engine and the entry point (about 4.5 MB). The game bundle downloads when it is needed, and only in the format the device uses. Filenames carry a hash and the CDN caches them forever, so a second visit comes straight from the browser cache. Table themes now load only the player's choice, after login. On staging, the first-visit download went from 65.25 MB to 13.96 MB.
+
+This overturned the original "precache everything, work offline" design, so I wrote an ADR recording why: a live poker table needs the network anyway, and the offline cache wasn't worth what it cost on the first visit.
+
+## Keeping it from regressing
+
+I added an asset-budget check to the release pipeline. Every release measures the node count, render components and texture GPU memory of 175 expanded prefabs and scenes, compares them with a baseline, and attaches the difference to the release notification.
+
+GPU memory here is deliberately computed from uncompressed sizes. Compression ratios differ from image to image; comparing compressed numbers would mix up "this image got bigger" with "this image is harder to compress".
+
+## What I learned
+
+- **Measure, then change.** The two biggest wins here, the memory leak and the precache, were not guesses. They turned up in item-by-item measurement.
+- **Run experiments in pairs.** Same device, same scene, 3 runs per variant, browser force-stopped in between; otherwise noise hides the difference between formats.
+- **The guard should outlast the change.** A font subset without the script that regenerates it quietly goes back to 10 MB at the next font update. The budget check exists for the same reason.

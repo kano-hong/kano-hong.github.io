@@ -1,0 +1,131 @@
+---
+title: 'Sub-game framework: state machines and a registry that put a new game on UAT in about 3 weeks'
+summary: A Texas Hold'em platform needed roulette, 100-player Hold'em and other sub-games on the same connection, but login, lobby and reconnect logic were scattered across scenes. I split the flow into testable xstate machines and designed a sub-game registry; a teammate followed the dev guide to build 3 new games, and the load-test bots run the very same flow.
+year: '2025–2026'
+role: Front-end Tech Lead
+company: Newdigit Co., Ltd. (XGaming)
+stack:
+  - xstate 5
+  - TypeScript
+  - MobX
+  - Protobuf
+  - WebSocket
+  - k6
+  - Vitest
+tags:
+  - Architecture
+  - State machines
+  - Game platform
+featured: true
+order: 1
+lang: en
+slug: subgame-state-machines
+---
+
+import Stats from '~/components/Stats.astro';
+import AppStateChart from '~/components/demos/AppStateChart.astro';
+import Video from '~/components/Video.astro';
+
+<Stats
+  items={[
+    { value: '~3 weeks', label: 'First roulette game, from scratch to UAT' },
+    { value: '3', label: 'New sub-games a teammate built on the framework' },
+    { value: '132', label: 'Unit tests for the machines and sub-games' },
+    { value: '1', label: 'State machine definition shared by the game and the k6 load test' },
+  ]}
+/>
+
+<Video
+  src="/videos/xstate-reconnect.mp4"
+  poster="/videos/xstate-reconnect.jpg"
+  caption="Recorded on UAT: the game on the left, Stately's live view of the state machine on the right. Lobby → enter roulette → disconnect (WebSocket closed on purpose) → automatic reconnect → back to the lobby."
+/>
+
+## The problem
+
+This is a Texas Hold'em platform that, in early 2026, needed several sub-games on the same WebSocket connection: roulette, 100-player Hold'em, Golden Flower and Niu Niu. Three problems had to be solved together:
+
+- **Reconnecting was a mess.** Players got stuck when a reconnect failed; coming back from the background could trigger duplicate reconnects; after reconnecting, the screen and the data sometimes disagreed.
+- **Sub-games had to share the flow.** Login, lobby and reconnect couldn't be rewritten for every game, but the platform also couldn't end up knowing about every game.
+- **Load tests had to run the real flow.** If the k6 script kept its own copy of the flow, it would drift away from the game and end up testing a path no player takes.
+
+## My role
+
+I designed the layering of the state machines and the sub-game registry, wrote the dev guide, and built the first roulette game myself as the template. A teammate followed the guide to build 100-player Hold'em, Golden Flower and Niu Niu. I also divided up the front-end work on the platform.
+
+## Decision 1: one machine per scene
+
+The top-level machine only tracks which scene you're in: loading, login, lobby or game. Entering a scene starts that scene's own child machine (xstate's `invoke`), and every event is forwarded to the current child (`forwardTo`).
+
+Each machine stays small and testable on its own. Adding `?inspect` to the URL opens Stately's live state chart, so while debugging you can see exactly which state you're stuck in.
+
+## Decision 2: machines only say "what happens next"
+
+Each machine is split into two files: `LobbyMachine.ts` defines only the states and transitions, and `LobbyMachine.impl.ts` provides what actually happens, such as sending the enter-table request.
+
+```ts
+// In the game (LobbyMachine.impl.ts): really send the enter-table request
+sendEnterTableRequest: fromPromise(async ({ input }) =>
+  GameHandler.sendEnterTableRequest(input.tableId),
+),
+
+// In the k6 load test (LobbyMachine.k6.impl.ts): same name, an implementation with no Cocos dependency
+sendEnterTableRequest: fromPromise(async ({ input }) => {
+  await new Promise((r) => setTimeout(r, 50)); // simulate network latency
+  console.log(`[K6 Mock] Sending enter table request for table: ${input.tableId}`);
+}),
+```
+
+Because the definitions contain no Cocos code, the same machine runs in three places: in the game, in Vitest unit tests and in k6 load tests. The load-test bots walk the same path players do, and there is no second copy to maintain. How the code is written, how it runs inside k6, and the pitfalls I hit are in "[One state machine, running in the game, unit tests and k6](/en/writing/why-we-refactored-with-xstate/)".
+
+## Decision 3: reconnecting is just three events
+
+Every machine knows only three reconnect events:
+
+- `app.reconnecting`: the connection dropped; wait for the reconnect.
+- `app.reconnected`: the reconnect is done, with the scene to return to (lobby or table).
+- `app.backToLogin`: logging in again failed; back to the login page.
+
+The reconnect flow lives in the WebSocket layer. It logs in again first; if the player was at a table before the drop, it re-enters that table using the saved game ID and room ID. If that works, the player is back at the table; if not, back in the lobby. Scenes don't handle disconnects themselves. They only catch these three events.
+
+## Decision 4: the platform knows no sub-game
+
+Each sub-game registers four things with the registry:
+
+```ts
+gameRegistry.register({
+  gameId: GameId.Texas100,
+  machine: texas100Machine,                          // this game's state machine
+  handlerFactory: (model) => new Texas100MessageHandler(model),  // packet handling
+  modelFactory: () => new Texas100GameDataModel({}),  // data model
+});
+```
+
+The WebSocket layer watches the registry (a MobX `reaction`). Whenever a new game registers, it builds that game's message handler and data model, and routes packets by `gameId`. Dependencies go one way only: sub-games can use the platform, and the platform never imports any sub-game.
+
+The dev guide sits at the top of the type definitions file, and adding a game takes 7 steps. That guide is what my teammate followed to build 100-player Hold'em, Golden Flower and Niu Niu.
+
+## Try it
+
+Below is a simplified top-level machine. Try disconnecting in the lobby, reconnecting, or disconnecting mid-game; then switch to "k6 load test" and see what the same event does in each implementation.
+
+<AppStateChart lang="en" />
+
+## Results
+
+- **The first roulette game went from zero to UAT in about 3 weeks**, including the wheel, betting area, chips, history, rebet and countdown. Two more roulette games were cloned from it, and the three together closed 13 UAT tickets.
+- **The platform went live in production in February 2026.**
+- **A teammate built 3 sub-games independently on the framework**, with no changes to the platform itself.
+- **132 unit tests** cover the machines and the sub-games, and a k6 integration test runs 100-player Hold'em end to end, from login to betting.
+
+<Video
+  src="/videos/k6-roulette-bot.mp4"
+  poster="/videos/k6-roulette-bot.jpg"
+  caption="Recorded on UAT: k6 runs one bot through the roulette sub-game using the game's own state machine: login → enter table → bet → payout → leave, all 7 checks passing. The per-second betting-heat pushes are left out, long messages are truncated, and idle gaps are cut to 1.2 seconds."
+/>
+
+## What I learned
+
+- **A framework is only as good as whether someone else can follow it.** Building roulette myself only proved it worked; a teammate building three games from the guide proved it was usable.
+- **Push side effects to the edges.** The machines only decide what happens next, so the same definition runs in the game, in unit tests and in load tests.
+- **Do reconnecting once.** One place owns the flow and only three events go out, so no scene needs its own version.

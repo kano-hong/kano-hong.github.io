@@ -1,73 +1,96 @@
 ---
 // 互動 demo：平台的頂層狀態機（簡化版）。點事件看狀態怎麼走、子遊戲怎麼從註冊表取出，
 // 並可切換「遊戲／k6 壓測」兩套實作，對照同一份定義在兩邊做的事。
+interface Props { lang?: 'zh-TW' | 'en' }
+const { lang = 'zh-TW' } = Astro.props;
+const T = {
+  'zh-TW': { impl: '實作', implLabel: '實作：', client: '遊戲', k6: 'k6 壓測',
+    nodes: ['載入', '登入', '大廳', '遊戲', '重連中'],
+    caption: '灰掉的按鈕代表目前狀態不接受這個事件。狀態機的好處就在這裡：不該發生的轉換，根本寫不出來。' },
+  en: { impl: 'Implementation', implLabel: 'Implementation:', client: 'Game', k6: 'k6 load test',
+    nodes: ['Loading', 'Login', 'Lobby', 'Game', 'Reconnecting'],
+    caption: "A greyed-out button means the current state doesn't accept that event. That's the point of a state machine: transitions that shouldn't happen can't even be written." },
+}[lang];
 ---
 
-<figure class="chart" data-chart>
-  <div class="impl" role="radiogroup" aria-label="實作">
-    <span>實作：</span>
-    <label><input type="radio" name="impl" value="client" checked /> 遊戲</label>
-    <label><input type="radio" name="impl" value="k6" /> k6 壓測</label>
+<figure class="chart" data-chart data-lang={lang}>
+  <div class="impl" role="radiogroup" aria-label={T.impl}>
+    <span>{T.implLabel}</span>
+    <label><input type="radio" name="impl" value="client" checked /> {T.client}</label>
+    <label><input type="radio" name="impl" value="k6" /> {T.k6}</label>
   </div>
 
   <ol class="nodes">
-    <li data-node="loading">載入</li>
-    <li data-node="login">登入</li>
-    <li data-node="lobby">大廳</li>
-    <li data-node="game">遊戲<small data-game></small></li>
-    <li data-node="reconnecting" class="side">重連中</li>
+    <li data-node="loading">{T.nodes[0]}</li>
+    <li data-node="login">{T.nodes[1]}</li>
+    <li data-node="lobby">{T.nodes[2]}</li>
+    <li data-node="game">{T.nodes[3]}<small data-game></small></li>
+    <li data-node="reconnecting" class="side">{T.nodes[4]}</li>
   </ol>
 
   <div class="events" data-events></div>
 
   <ul class="log" data-log aria-live="polite"></ul>
-  <figcaption>
-    灰掉的按鈕代表目前狀態不接受這個事件。狀態機的好處就在這裡：不該發生的轉換，根本寫不出來。
-  </figcaption>
+  <figcaption>{T.caption}</figcaption>
 </figure>
 
 <script>
   type State = 'loading' | 'login' | 'lobby' | 'game' | 'reconnecting';
   type Impl = 'client' | 'k6';
+  type Lang = 'zh-TW' | 'en';
+  interface Ctx { state: State; prev: State; game: string; impl: Impl }
+  interface Ev { id: string; label: string; from: State[]; to: (s: Ctx) => State; effect: Record<Impl, string>; game?: string }
 
   // 註冊表裡的子遊戲（通用名稱）
-  const GAMES = ['輪盤', '百人德州', '炸金花', '牛牛'];
+  const GAMES: Record<Lang, string[]> = {
+    'zh-TW': ['輪盤', '百人德州', '炸金花', '牛牛'],
+    en: ['Roulette', '100-Player Hold’em', 'Golden Flower', 'Niu Niu'],
+  };
+
+  const NAMES: Record<Lang, Record<State, string>> = {
+    'zh-TW': { loading: '載入', login: '登入', lobby: '大廳', game: '遊戲', reconnecting: '重連中' },
+    en: { loading: 'Loading', login: 'Login', lobby: 'Lobby', game: 'Game', reconnecting: 'Reconnecting' },
+  };
 
   // 每個事件：哪些狀態接受、去哪、兩套實作各做什麼
-  const EVENTS: {
-    id: string;
-    label: string;
-    from: State[];
-    to: (s: Ctx) => State;
-    effect: Record<Impl, string>;
-    game?: string;
-  }[] = [
-    { id: 'loaded', label: '載入完成', from: ['loading'], to: () => 'login',
-      effect: { client: '資源載完，切到登入場景', k6: '跳過資源載入' } },
-    { id: 'login', label: '登入成功', from: ['login'], to: () => 'lobby',
-      effect: { client: '切到大廳場景', k6: '記錄登入耗時' } },
-    ...GAMES.map((g) => ({
-      id: `enter-${g}`, label: `進入${g}`, game: g, from: ['lobby'] as State[], to: () => 'game' as State,
-      effect: {
-        client: `registry.get(${g}) 取出狀態機、訊息處理器、資料模型 → 顯示 loading、送進桌請求`,
-        k6: `registry.get(${g}) → 等 50 ms 模擬網路、記錄 log`,
-      },
-    })),
-    { id: 'leave', label: '離開遊戲', from: ['game'], to: () => 'lobby',
-      effect: { client: '清掉這款遊戲的資料模型，回大廳', k6: '記錄離桌' } },
-    { id: 'disconnect', label: '斷線', from: ['lobby', 'game'], to: () => 'reconnecting',
-      effect: { client: 'app.reconnecting：顯示重連提示', k6: 'app.reconnecting：記錄斷線' } },
-    { id: 'reconnected', label: '重連成功', from: ['reconnecting'], to: (c) => c.prev,
-      effect: { client: '重新登入；原本在牌桌就用上一桌的遊戲與房間 ID 重新進桌 → app.reconnected', k6: 'app.reconnected：繼續原本的流程' } },
-    { id: 'fail', label: '重連失敗', from: ['reconnecting'], to: () => 'login',
-      effect: { client: '重新登入失敗 → app.backToLogin：清掉遊戲資料，回登入頁', k6: 'app.backToLogin：重新登入' } },
-  ];
-
-  const NAMES: Record<State, string> = { loading: '載入', login: '登入', lobby: '大廳', game: '遊戲', reconnecting: '重連中' };
-
-  interface Ctx { state: State; prev: State; game: string; impl: Impl }
+  function events(lang: Lang): Ev[] {
+    const zh = lang === 'zh-TW';
+    return [
+      { id: 'loaded', label: zh ? '載入完成' : 'Loaded', from: ['loading'], to: () => 'login',
+        effect: zh ? { client: '資源載完，切到登入場景', k6: '跳過資源載入' }
+                   : { client: 'Assets loaded, switch to the login scene', k6: 'Skip asset loading' } },
+      { id: 'login', label: zh ? '登入成功' : 'Logged in', from: ['login'], to: () => 'lobby',
+        effect: zh ? { client: '切到大廳場景', k6: '記錄登入耗時' }
+                   : { client: 'Switch to the lobby scene', k6: 'Record login time' } },
+      ...GAMES[lang].map((g) => ({
+        id: `enter-${g}`, label: zh ? `進入${g}` : `Enter ${g}`, game: g, from: ['lobby'] as State[], to: () => 'game' as State,
+        effect: zh ? {
+          client: `registry.get(${g}) 取出狀態機、訊息處理器、資料模型 → 顯示 loading、送進桌請求`,
+          k6: `registry.get(${g}) → 等 50 ms 模擬網路、記錄 log`,
+        } : {
+          client: `registry.get(${g}) returns its machine, message handler and data model → show loading, send the enter-table request`,
+          k6: `registry.get(${g}) → wait 50 ms to simulate the network, write a log line`,
+        },
+      })),
+      { id: 'leave', label: zh ? '離開遊戲' : 'Leave game', from: ['game'], to: () => 'lobby',
+        effect: zh ? { client: '清掉這款遊戲的資料模型，回大廳', k6: '記錄離桌' }
+                   : { client: "Clear this game's data model, back to the lobby", k6: 'Record leaving the table' } },
+      { id: 'disconnect', label: zh ? '斷線' : 'Disconnect', from: ['lobby', 'game'], to: () => 'reconnecting',
+        effect: zh ? { client: 'app.reconnecting：顯示重連提示', k6: 'app.reconnecting：記錄斷線' }
+                   : { client: 'app.reconnecting: show the reconnecting notice', k6: 'app.reconnecting: record the disconnect' } },
+      { id: 'reconnected', label: zh ? '重連成功' : 'Reconnected', from: ['reconnecting'], to: (c) => c.prev,
+        effect: zh ? { client: '重新登入；原本在牌桌就用上一桌的遊戲與房間 ID 重新進桌 → app.reconnected', k6: 'app.reconnected：繼續原本的流程' }
+                   : { client: 'Log in again; if the player was at a table, re-enter it with the saved game and room IDs → app.reconnected', k6: 'app.reconnected: carry on with the flow' } },
+      { id: 'fail', label: zh ? '重連失敗' : 'Reconnect failed', from: ['reconnecting'], to: () => 'login',
+        effect: zh ? { client: '重新登入失敗 → app.backToLogin：清掉遊戲資料，回登入頁', k6: 'app.backToLogin：重新登入' }
+                   : { client: 'Re-login failed → app.backToLogin: clear game data, back to the login page', k6: 'app.backToLogin: log in again' } },
+    ];
+  }
 
   document.querySelectorAll<HTMLElement>('[data-chart]').forEach((root) => {
+    const lang = (root.dataset.lang === 'en' ? 'en' : 'zh-TW') as Lang;
+    const EVENTS = events(lang);
+    const names = NAMES[lang];
     const ctx: Ctx = { state: 'loading', prev: 'lobby', game: '', impl: 'client' };
     const eventsEl = root.querySelector<HTMLElement>('[data-events]')!;
     const logEl = root.querySelector<HTMLElement>('[data-log]')!;
@@ -85,7 +108,7 @@
         if (ctx.state === 'lobby' || ctx.state === 'login') ctx.game = '';
         const li = document.createElement('li');
         li.innerHTML = `<b></b><span></span>`;
-        li.querySelector('b')!.textContent = `${ev.label}：${NAMES[from]} → ${NAMES[ctx.state]}`;
+        li.querySelector('b')!.textContent = `${ev.label}${lang === 'en' ? ': ' : '：'}${names[from]} → ${names[ctx.state]}`;
         li.querySelector('span')!.textContent = ev.effect[ctx.impl];
         logEl.prepend(li);
         while (logEl.children.length > 4) logEl.lastElementChild!.remove();

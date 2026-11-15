@@ -1,0 +1,124 @@
+---
+title: 'AI-assisted engineering: letting Claude Code do the work without letting it do real damage'
+summary: Since May 2026, about half of my commits were made together with Claude Code. The real effort wasn't getting the AI to write more code. It was setting up guardrails, turning operations work into repeatable skills, and letting it drive the editor and internal tools directly.
+year: '2026'
+role: Front-end Tech Lead
+company: Newdigit Co., Ltd. (XGaming)
+stack:
+  - Claude Code
+  - MCP
+  - Python
+  - Node.js
+  - Cocos Creator Extension
+  - Lark Open API
+tags:
+  - AI engineering
+  - Developer tools
+  - Automation
+featured: true
+order: 4
+lang: en
+slug: ai-assisted-engineering
+---
+
+import Stats from '~/components/Stats.astro';
+import GuardDemo from '~/components/demos/GuardDemo.astro';
+import Video from '~/components/Video.astro';
+
+<Stats
+  items={[
+    { value: '49%', label: 'of commits made with Claude Code since May 2026 (2,681 / 5,496)' },
+    { value: '14,693', label: 'real commands replayed to validate the blocking rules' },
+    { value: '10+', label: 'operations skills I wrote' },
+    { value: '11', label: 'tools in cocos-mcp, with zero dependencies' },
+  ]}
+/>
+
+## The problem
+
+AI writes code fast, and it can also be confidently wrong. Things that actually happened:
+
+- **Printing secrets into the conversation.** A `grep -v password` filter let through a line that spelled "password" another way; asking for a container's environment variables printed a whole line of JSON config, credentials included.
+- **Batch-deleting the wrong things.** Containers were batch-removed from a filter result, the filter didn't take effect, and the wrong ones went.
+- **Starting from scratch every time.** The same release or troubleshooting routine had to be rediscovered in every session, with the same step at risk of being missed every time.
+
+So I focused on three things: keep it from doing real damage, make work repeatable, and let it operate the real tools directly.
+
+## Decision 1: a hook that blocks the incident patterns
+
+Before Claude Code runs any command, the command passes through a hook I wrote (`PreToolUse`). The rules weren't invented from nothing; each one maps to a real incident:
+
+- **Printing secret files**: printing `.env`, `*.pem` and similar files is blocked. Counting lines, printing only the keys, or reading a value into a variable without printing it is allowed.
+- **Printing the whole environment**: a container's env or `/proc/*/environ` is blocked. Letting Python pick out only the keys is allowed.
+- **Batch-removing containers from a filter result**: always blocked; use explicit names instead.
+- **Cleanups that delete data**: `compose down -v` and `docker system prune` aren't blocked outright. They ask me first.
+
+When something is blocked, the message spells out the safe way to do it, so the AI's next step is usually the rewrite rather than another way around the rule.
+
+Every rule change is verified twice. All 49 tests must pass, and then all 14,693 real commands from my Claude Code transcripts are replayed: 82 blocked, 34 asked, in 0.74 seconds. The replay is there to make sure everyday commands aren't blocked by mistake, because a noisy guardrail ends up switched off.
+
+<GuardDemo lang="en" />
+
+<Video
+  src="/videos/guard-hook.mp4"
+  poster="/videos/guard-hook.jpg"
+  caption="Seven commands handed to the hook (none of them actually run): incident patterns are blocked with a safe alternative, the rewrites go through, and data-deleting cleanups ask first. Then all 49 tests pass. The hook's messages are in Chinese."
+/>
+
+## Decision 2: write operations work up as skills
+
+Once I've done something a second time, I write it up as a skill: instructions written for the AI, plus the scripts it needs. Next time I just say "ship to prod" or "build everything once", and it follows the same steps, with the reason for each step written in.
+
+- **Production releases**: pack locally, build the image offline on the production machine, compare effective settings, swap 1 server and then the other 7, and run a one-hour check (see "[Real-money releases in production](../prod-canary-release/)").
+- **Building every game**: trigger every game on three product lines, throttled, and sort failures by type.
+- **Deployment docs sync**: whenever the deployment state changes, update the docs and push them.
+- **Read-only lookups**: production bet records and errors in the Lark alert channel, read only, never written.
+- **On-device debugging**: drive Safari on a USB-connected iPhone from the command line and measure what is really on screen and in memory.
+
+Tuning a skill's trigger description had its own trap. The evaluation tool runs test prompts with full permissions, so a prompt like "ship to prod" could really connect to the production machine during an eval. I restricted the eval subprocesses to reading files and calling skills.
+
+## Decision 3: let the AI drive the editor
+
+Cocos Creator is a desktop app. The AI couldn't reach the scenes and prefabs inside it and had to ask a person to click.
+
+**cocos-mcp** is an open-source project of mine: an MCP server that runs inside the Cocos Creator editor process, so the AI can query the live scene tree, read and write assets, start builds, read logs, and take screenshots to check what it just did.
+
+Other Cocos MCP servers ship over 100 tools and then hide most of them behind "toolsets". I built 11: a few general-purpose tools, plus one that reads the editor's own TypeScript type definitions. The AI looks up a function's signature first, then calls it through the general `editor_request`. There are zero dependencies and no build step, and a single `.mcp.json` at the project root is read by both sides, so the configuration can't drift. Tools that write a property read it straight back and report the value before and after, so "it worked" is measured, not just claimed by the tool.
+
+<Video
+  src="/videos/cocos-mcp-editor.mp4"
+  poster="/videos/cocos-mcp-editor.jpg"
+  caption="Recording: the AI drives the editor through cocos-mcp, creating a node, adding a Label, changing the text, enlarging the font, turning it orange, moving it up and finally deleting it (nobody touched the mouse, and nothing was saved)."
+/>
+
+**figma-to-cocos** is an editor extension that turns Figma designs into Cocos nodes, forked from an MIT-licensed version on the Cocos Store. I gave it a full audit and fix pass:
+
+- **P0**: the Figma token leaked in plain text, it broke on 429 rate limits, solid rectangles were dropped, and rotation was always 0.
+- **P1**: URL parsing, render scale, HTTPS only.
+- **P2**: constraints mapped to Widget, corner radius and gradients; Auto Layout becomes a Layout only where it maps faithfully.
+
+On top of that came 13 fixes from two rounds of code review and 104 offline tests. Once the tests were written, I reverted each fix to the old behavior one at a time to confirm the tests really fail. Finally I wired it to cocos-mcp, so a Figma design can be turned into a prefab automatically in two stages.
+
+<Video
+  src="/videos/figma-to-cocos.mp4"
+  poster="/videos/figma-to-cocos.jpg"
+  caption="Recording (the wait on the Figma API is sped up 6×): the AI drives the figma-to-cocos panel through cocos-mcp. Paste a Figma link → parse → automatically find, download and convert 35 images → generate into the scene, turning a full design page into Cocos nodes. Afterwards the generated nodes and images were deleted, and nothing was saved."
+/>
+
+## Decision 4: parallel agents need a budget
+
+While writing 46 specs, I ran two workflows at once, 106 agents in parallel, and hit the usage limit within an hour: more than 50 agents failed together. The limit is a rolling window shared by the whole session; hitting it doesn't slow things down, it fails the whole batch.
+
+After switching to one workflow at a time, in batches of about 30 agents, 5 batches in a row ran with zero failures. The other lesson: an agent marked as failed doesn't mean its side effects didn't happen. Many had written their files and failed only while reporting back, so check the disk before retrying.
+
+## Decision 5: guardrails for bots
+
+- **The AI bot on Lark**: someone asked it a question in the alert channel. It could only read static files on the Mac, yet it confidently pointed at the wrong container. I gave it a hard rule, "not seeing it doesn't mean it didn't happen", and a read-only, parameterless tool that reads the bot messages recently posted in the alert channel.
+- **Letting the bot query production**: it gets a dedicated key that can run only fixed read-only commands (a forced command). Actions such as a restart go through an approval card and are sent only after someone presses it. Group messages are untrusted input, so the bot gets no arbitrary commands.
+- **Sharing with the team**: I added an `AGENTS.md` for AI agents to the projects and put the hooks, skills and subagents under version control for the team. My own CLAUDE.md went from 119,000 characters to about 30,000, with the runbooks moved into skills.
+
+## What I learned
+
+- **Guardrails should come from incidents.** Rules invented from nothing are either too loose or too noisy. Each rule here maps to a real incident, and the historical commands confirm it doesn't block by mistake.
+- **Verify most when the AI is most confident.** When it says "it's this container", look at what it actually read; when it says "fixed", ask in which environment it was verified.
+- **Editing the file is sometimes better than going through the tool.** The same prefab change was +35 / −0 lines when I edited the file directly and +2,340 / −1,957 lines when the editor re-serialized it; a reviewer couldn't tell what had changed.

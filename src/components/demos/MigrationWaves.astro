@@ -1,36 +1,61 @@
 ---
 // 互動 demo：283 個 repo 依波次搬到新站的過程。每格是一個 repo：
 // 灰＝還在舊站、淺色＝已複製、主色＝已校驗、深色＝已切換。數字照實際遷移紀錄。
-const WAVES = [
-  { n: 1, label: '試跑：先搬 1 個小 repo，確認 LFS 與子模組指標都對' },
-  { n: 250, label: '第一波：250 個沒人在改的 repo（約 1 成因新站 SSH 偶發換金鑰失敗，重跑補齊）' },
-  { n: 3, label: 'PG 前端 3 個（最大的 12 GB）' },
-  { n: 22, label: '第二波 A：測試中的產品與子遊戲 22 個' },
-  { n: 4, label: '第二波 B：所有分支共用的 entry、base、建置腳本 4 個' },
-  { n: 3, label: '最後：還在開發的 op3 系列 3 個' },
-];
+interface Props { lang?: 'zh-TW' | 'en' }
+const { lang = 'zh-TW' } = Astro.props;
+const T = {
+  'zh-TW': {
+    waves: [
+      { n: 1, label: '試跑：先搬 1 個小 repo，確認 LFS 與子模組指標都對' },
+      { n: 250, label: '第一波：250 個沒人在改的 repo（約 1 成因新站 SSH 偶發換金鑰失敗，重跑補齊）' },
+      { n: 3, label: 'Slot 平台前端 3 個（最大的 12 GB）' },
+      { n: 22, label: '第二波 A：測試中的產品與子遊戲 22 個' },
+      { n: 4, label: '第二波 B：所有分支共用的 entry、base、建置腳本 4 個' },
+      { n: 3, label: '最後：還在開發的德州撲克 Web 版系列 3 個' },
+    ],
+    play: '▶ 播放', reset: '重設', idle: '按播放，看 283 個 repo 怎麼搬。',
+    copied: '已複製', verified: '已校驗', cut: '已切換',
+    cutover: '切換日：凍結推送 → 283 個與舊站逐一比對完全一致 → 改寫子模組與套件網址 → 切換',
+    done: '切換完成：112 個 webhook 0 失敗，隔天三條產品線 89 款遊戲建置全部通過。',
+    caption: '複製期間舊站一直是唯一的來源，開發者照常推。到了切換那天才凍結、逐一比對新舊兩邊，一次切過去。',
+  },
+  en: {
+    waves: [
+      { n: 1, label: 'Dry run: move 1 small repo and check LFS and submodule pointers' },
+      { n: 250, label: 'Wave 1: 250 repos nobody was touching (about 1 in 10 failed on the new server’s occasional SSH host-key swap; a rerun filled them in)' },
+      { n: 3, label: '3 slot-platform front-end repos (the largest is 12 GB)' },
+      { n: 22, label: 'Wave 2A: 22 products and sub-games in testing' },
+      { n: 4, label: 'Wave 2B: the 4 shared repos every branch uses (entry, base, build scripts)' },
+      { n: 3, label: 'Last: the 3 poker web repos still in active development' },
+    ],
+    play: '▶ Play', reset: 'Reset', idle: 'Press play to watch 283 repos move.',
+    copied: 'Copied', verified: 'Verified', cut: 'Cut over',
+    cutover: 'Cutover day: freeze pushes → all 283 match the old server ref for ref → rewrite submodule and package URLs → switch',
+    done: 'Done: 112 webhooks created with 0 failures; the next day all 89 games on three product lines built green.',
+    caption: 'While copying, the old server stayed the only source of truth and developers kept pushing as usual. Only on cutover day was it frozen, compared side by side, and switched in one go.',
+  },
+}[lang];
 ---
 
-<figure class="waves" data-waves={JSON.stringify(WAVES)}>
+<figure class="waves" data-waves={JSON.stringify(T.waves)} data-text={JSON.stringify({ idle: T.idle, cutover: T.cutover, done: T.done })}>
   <div class="bar">
-    <button type="button" data-play>▶ 播放</button>
-    <button type="button" data-reset>重設</button>
-    <span class="step" data-step aria-live="polite">按播放，看 283 個 repo 怎麼搬。</span>
+    <button type="button" data-play>{T.play}</button>
+    <button type="button" data-reset>{T.reset}</button>
+    <span class="step" data-step aria-live="polite">{T.idle}</span>
   </div>
   <div class="grid" data-grid></div>
   <dl class="count">
-    <div><dt>已複製</dt><dd data-c="copied">0</dd></div>
-    <div><dt>已校驗</dt><dd data-c="verified">0</dd></div>
-    <div><dt>已切換</dt><dd data-c="cut">0</dd></div>
+    <div><dt>{T.copied}</dt><dd data-c="copied">0</dd></div>
+    <div><dt>{T.verified}</dt><dd data-c="verified">0</dd></div>
+    <div><dt>{T.cut}</dt><dd data-c="cut">0</dd></div>
   </dl>
-  <figcaption>
-    複製期間舊站一直是唯一的來源，開發者照常推。到了切換那天才凍結、逐一比對新舊兩邊，一次切過去。
-  </figcaption>
+  <figcaption>{T.caption}</figcaption>
 </figure>
 
 <script>
   document.querySelectorAll<HTMLElement>('[data-waves]').forEach((root) => {
     const waves: { n: number; label: string }[] = JSON.parse(root.dataset.waves!);
+    const text: { idle: string; cutover: string; done: string } = JSON.parse(root.dataset.text!);
     const total = waves.reduce((s, w) => s + w.n, 0);
     const grid = root.querySelector<HTMLElement>('[data-grid]')!;
     const step = root.querySelector<HTMLElement>('[data-step]')!;
@@ -47,7 +72,7 @@ const WAVES = [
       run++; clearTimeout(timer);
       cells.forEach((c) => (c.className = ''));
       ['copied', 'verified', 'cut'].forEach((k) => count(k, 0));
-      step.textContent = '按播放，看 283 個 repo 怎麼搬。';
+      step.textContent = text.idle;
       play.disabled = false;
     }
 
@@ -74,12 +99,12 @@ const WAVES = [
         i += w.n;
         await pause(700);
       }
-      step.textContent = '切換日：凍結推送 → 283 個與舊站逐一比對完全一致 → 改寫子模組與套件網址 → 切換';
+      step.textContent = text.cutover;
       await pause(1200);
       if (me !== run) return;
       cells.forEach((c) => (c.className = 'cut'));
       count('cut', total);
-      step.textContent = '切換完成：112 個 webhook 0 失敗，隔天三條產品線 89 款遊戲建置全部通過。';
+      step.textContent = text.done;
       play.disabled = false;
     }
 

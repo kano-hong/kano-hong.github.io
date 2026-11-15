@@ -1,0 +1,94 @@
+---
+title: 'GitLab migration: 283 repos moved, 89 game builds green the next day'
+summary: The company's old GitLab was being retired, with 283 game and release repos, 86 per-game Jenkins jobs and over a hundred webhooks hanging off it. I drove the whole move from one mapping table, verified every repo before a single cutover, and used the move to fold the builds into group jobs and pull hard-coded credentials out of the scripts.
+year: '2026'
+role: Front-end Tech Lead
+company: Newdigit Co., Ltd. (XGaming)
+stack:
+  - GitLab API
+  - Git LFS
+  - Jenkins
+  - Bash / POSIX sh
+  - Python
+tags:
+  - CI/CD
+  - Migration
+  - Platform operations
+featured: true
+order: 2
+lang: en
+slug: gitlab-migration
+---
+
+import Stats from '~/components/Stats.astro';
+import MigrationWaves from '~/components/demos/MigrationWaves.astro';
+
+<Stats
+  items={[
+    { value: '283', label: 'repos verified one by one before cutover' },
+    { value: '0 failures', label: 'across the 112 webhooks on the new server' },
+    { value: '86 → 6', label: 'per-game jobs folded into group jobs' },
+    { value: '89', label: 'games building green the day after cutover' },
+  ]}
+/>
+
+## The problem
+
+In October 2026 the company decided to retire its old GitLab and move the code to a new server. On the front-end side there was more to move than git:
+
+- **283 repos**: game source, a release repo per game and shared libraries, many with Git LFS files. The largest was 12 GB.
+- **Submodule and package URLs**: every branch of the entry project mounts dozens of games as submodules, and `package.json` installs shared packages from git URLs, all hard-coded to the old server.
+- **Builds**: 86 one-job-per-game Jenkins jobs, over a hundred push webhooks that trigger builds, and build scripts with the old server's URL and credentials written into them.
+
+And while all of this moved, several poker products were still in development and couldn't stop.
+
+## My role
+
+Ops set up the new server. On the front-end side I owned everything from the inventory, planning new groups by product line and writing the migration scripts to running the cutover and verifying afterwards. The back-end team moved their own repos. I wrote the migration scripts with Claude Code; see "[AI-assisted engineering](../ai-assisted-engineering/)".
+
+## Decision 1: one mapping table drives everything
+
+I first inventoried the old server's four groups into a single `mapping.csv` of 311 rows: old path, new path, wave, and whether to move it at all. 28 repos that were long archived or on an old architecture were marked "don't move" and stayed behind.
+
+That table was the only thing that needed human review. New paths were regrouped by product line, and anything unclear I asked about instead of guessing. Everything after that read from the table: the Lark migration log, the submodule URL rewrites, the webhooks and the Jenkins changes.
+
+## Decision 2: move only branches and tags, so not one SHA changes
+
+For each repo: `git clone --mirror` plus `git lfs fetch --all`, create the project at its new path through the API, then push only `refs/heads/*` and `refs/tags/*`.
+
+- **No `push --mirror`**: a mirror carries hidden refs such as `refs/merge-requests/*`, which the new server rejects.
+- **LFS before refs**: the new server's pre-receive hook rejects a push whose LFS objects haven't arrived yet.
+- **Same SHAs**: every submodule pointer stays valid, so the entry project only needs new URLs, not new pointers.
+
+Dry runs also hit a few limits on the new server. HTTPS returns 413 above about 50 MB, so refs go over SSH. A first push over 1 GB fails when the LFS integrity scan times out, so for big repos without LFS files I turned LFS off for the duration of the push. And the new server's SSH occasionally presents a different host key, so the script retries and a second full pass fills the gaps.
+
+## Decision 3: copy in waves, cut over once
+
+Copying and cutting over are two different things. While copying, the old server stays the single source of truth and developers keep pushing as usual; nobody is affected. Only cutover day needs a freeze.
+
+The order follows how many people are actively changing things: a 1-repo dry run first, then the 250 nobody was touching, then the products in testing, and last the poker web app still in active development.
+
+<MigrationWaves lang="en" />
+
+The entry project's build runs `git submodule update --remote`, fetching the latest code from the URL in `.gitmodules`. If a game moved to the new server while the entry still pointed at the old one, the build would quietly pick up stale code. So the whole submodule chain had to switch on the same day.
+
+Verification also has to point at the real source. At first I compared against my local mirror, and once a mirror had fetched only half, so next to an empty target it looked "the same". From then on, everything was compared with the old server's refs.
+
+## Decision 4: tidy up the builds while we're at it
+
+- **86 per-game jobs became 6 group jobs**: one per product line, with the game code as a parameter.
+- **Webhook relay rewritten**: it is now POSIX sh, tells product lines apart by repo URL (every group on the new server is called `cocos`, so the name doesn't help), and only builds pushes to `dev` and `staging`. 12 scenarios were verified with a dry run first.
+- **Credentials out of the scripts**: the GitLab token, webhook secret and Jenkins password were written in the build scripts and even printed into build logs. They are now read from environment variables, and the script exits if they aren't set.
+- **Webhook verification**: the new server has no API for testing a webhook, so I hit the relay with a fake push. A wrong secret returns 401, the right one returns 200, and because the branch doesn't match, no build actually fires.
+
+## Results
+
+- **Cutover finished on October 10, 2026**: after the freeze, all 283 repos matched exactly between old and new, and 112 webhooks were created with 0 failures.
+- **The next day I triggered a build of every game.** On one product line 33 games failed because that branch's lock file was missing 42 workspace links, which was already the case before the move. After fixing it and rerunning, all 89 games on the three product lines that stayed in group jobs passed. 4 more had never built (source or release repo missing) and were removed from the job options.
+- **The old server went read-only**, and all development moved to the new one.
+
+## What I learned
+
+- **Rewriting URLs means scanning the whole tree.** The first pass only changed the root `package.json`; a `package.json` inside an npm workspace still pointed at the old server, and the build failed at `npm ci`. Since then, every rewrite scans the `package.json`, lock files and `.gitmodules` at every level.
+- **Verify against the real source.** Compare with your own copy, and a broken copy will still say "same".
+- **Separate whatever can be separated.** Copying can be redone; cutover can't. Finish and verify everything that can be redone, and cutover day has very little left to do.

@@ -1,11 +1,23 @@
 ---
 // 互動 demo：同一批貼圖在不同 GPU 格式下佔多少顯存。依區塊大小逐層精算（含 mipmap）。
+interface Props { lang?: 'zh-TW' | 'en' }
+const { lang = 'zh-TW' } = Astro.props;
+const T = {
+  'zh-TW': { size: '尺寸', count: '張數',
+    webp: '上 GPU 前解成 RGBA8，每像素 4 bytes', etc1s: '轉成 ETC2 RGBA，每像素 1 byte',
+    uastc: '轉成 ASTC 4×4，每像素 1 byte', xuastc: '轉成 ASTC 8×8，每像素 0.25 byte',
+    caption: '下載的檔案大小和顯存是兩回事：WebP 檔案最小，放到 GPU 上卻最大。拉拉看張數，就知道手機為什麼撐不住。' },
+  en: { size: 'Size', count: 'Textures',
+    webp: 'decoded to RGBA8 before upload, 4 bytes per pixel', etc1s: 'transcoded to ETC2 RGBA, 1 byte per pixel',
+    uastc: 'transcoded to ASTC 4×4, 1 byte per pixel', xuastc: 'transcoded to ASTC 8×8, 0.25 byte per pixel',
+    caption: 'Download size and GPU memory are two different things: WebP is the smallest file and the largest on the GPU. Drag the texture count and you can see why phones give up.' },
+}[lang];
 ---
 
 <figure class="texmem" data-texmem>
   <div class="controls">
     <label>
-      尺寸
+      {T.size}
       <select data-size>
         <option value="512">512 × 512</option>
         <option value="1024">1024 × 1024</option>
@@ -14,7 +26,7 @@
       </select>
     </label>
     <label>
-      張數 <output data-count-out>24</output>
+      {T.count} <output data-count-out>24</output>
       <input type="range" min="1" max="120" value="24" data-count />
     </label>
     <label class="check">
@@ -24,29 +36,27 @@
 
   <ul class="rows">
     <li data-fmt="1,4">
-      <span class="name">WebP／PNG<small>上 GPU 前解成 RGBA8，每像素 4 bytes</small></span>
+      <span class="name">WebP／PNG<small>{T.webp}</small></span>
       <span class="track"><span class="bar"></span></span>
       <span class="mb"></span>
     </li>
     <li data-fmt="4,16">
-      <span class="name">ETC1S<small>轉成 ETC2 RGBA，每像素 1 byte</small></span>
+      <span class="name">ETC1S<small>{T.etc1s}</small></span>
       <span class="track"><span class="bar"></span></span>
       <span class="mb"></span>
     </li>
     <li data-fmt="4,16">
-      <span class="name">UASTC<small>轉成 ASTC 4×4，每像素 1 byte</small></span>
+      <span class="name">UASTC<small>{T.uastc}</small></span>
       <span class="track"><span class="bar"></span></span>
       <span class="mb"></span>
     </li>
     <li data-fmt="8,16" class="pick">
-      <span class="name">XUASTC 8×8<small>轉成 ASTC 8×8，每像素 0.25 byte</small></span>
+      <span class="name">XUASTC 8×8<small>{T.xuastc}</small></span>
       <span class="track"><span class="bar"></span></span>
       <span class="mb"></span>
     </li>
   </ul>
-  <figcaption>
-    下載的檔案大小和顯存是兩回事：WebP 檔案最小，放到 GPU 上卻最大。拉拉看張數，就知道手機為什麼撐不住。
-  </figcaption>
+  <figcaption>{T.caption}</figcaption>
 </figure>
 
 <script>
