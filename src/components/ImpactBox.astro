@@ -1,0 +1,58 @@
+---
+// 案例頁頂部的影響框：我的角色／團隊規模／時程／關鍵結果。缺的資料只在 dev 顯示 TODO。
+import Todo from '~/components/Todo.astro';
+import type { Lang } from '~/i18n';
+
+interface Props {
+  lang: Lang;
+  impact: { role: string; team?: string; timeline?: string; results: string[]; todo: string[] };
+}
+const { lang, impact } = Astro.props;
+const L = lang === 'zh-TW'
+  ? { role: '我的角色', team: '團隊規模', timeline: '時程', results: '關鍵結果' }
+  : { role: 'My role', team: 'Team', timeline: 'Timeline', results: 'Key results' };
+const dev = import.meta.env.DEV;
+---
+
+<dl class="impact">
+  <div class="wide"><dt>{L.role}</dt><dd>{impact.role}</dd></div>
+  {(impact.team || dev) && <div><dt>{L.team}</dt><dd>{impact.team ?? <Todo text={L.team} />}</dd></div>}
+  {(impact.timeline || dev) && <div><dt>{L.timeline}</dt><dd>{impact.timeline ?? <Todo text={L.timeline} />}</dd></div>}
+  <div class="wide">
+    <dt>{L.results}</dt>
+    <dd>
+      <ul>{impact.results.map((r) => <li>{r}</li>)}</ul>
+      {impact.todo.map((t) => <Todo text={t} />)}
+    </dd>
+  </div>
+</dl>
+
+<style>
+  .impact {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 2rem;
+    margin-top: 2rem;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    background: var(--paper-tint);
+  }
+  .wide { grid-column: 1 / -1; }
+  dt {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+  }
+  dd { margin: 0; color: var(--ink); line-height: 1.6; }
+  ul { margin: 0; padding-left: 1.1rem; }
+  li + li { margin-top: 0.2rem; }
+  dd :global(.todo) { margin: 0.4rem 0.4rem 0 0; }
+  @media (max-width: 540px) {
+    .impact { grid-template-columns: 1fr; }
+  }
+</style>

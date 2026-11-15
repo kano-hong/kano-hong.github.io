@@ -17,6 +17,16 @@ const projects = defineCollection({
     year: z.string(),
     role: z.string(),
     company: z.string().optional(),
+    // 案例頁頂部的影響框；team／timeline 沒填時只在 dev 顯示 TODO
+    impact: z
+      .object({
+        role: z.string(),
+        team: z.string().optional(),
+        timeline: z.string().optional(),
+        results: z.array(z.string()),
+        todo: z.array(z.string()).default([]),
+      })
+      .optional(),
     stack: z.array(z.string()),
     tags: z.array(z.string()).default([]),
     cover: z.string().optional(),

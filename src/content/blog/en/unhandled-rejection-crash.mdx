@@ -22,7 +22,7 @@ This is the technical companion to “[Real-money releases in production](/en/wo
 
 The service is a game server for a slot platform: Node.js 18, 8 containers on one production host, sharing one MongoDB.
 
-Early on 2026-10-30, all 8 containers lost their database connections within 8 ms and then exited together. Docker restarted them and service was back in about 11 seconds. An earlier disconnect, on 10-24, had caused nearly an hour of crash-looping.
+Early on October 30, 2026, all 8 containers lost their database connections within 8 ms and then exited together. Docker restarted them and service was back in about 11 seconds. An earlier disconnect, on October 24, had caused nearly an hour of crash-looping.
 
 ## Ruling out the host
 
@@ -117,7 +117,7 @@ The first attempt failed to reproduce because the outage was shorter than the dr
 
 ## A week later, the database dropped again
 
-The fix went out as a canary release on 10-31. On the evening of 11-07 the database cut connections to 5 of the 8 servers within one second. This time there were **0 restarts**.
+The fix went out as a canary release on October 31. On the evening of November 7 the database cut connections to 5 of the 8 servers within one second. This time there were **0 restarts**.
 
 Not crashing didn't mean no impact. In that second, 59 game records failed to write. The wallet side had already completed, so player balances were correct; only the records were missing. Because every failed write logged its full payload, two days later, with approval, I backfilled them: a dry run first, types matched to the original writer, and all 59 read back identical.
 

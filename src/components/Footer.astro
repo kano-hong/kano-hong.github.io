@@ -1,5 +1,6 @@
 ---
 import { useTranslations, type Lang } from '~/i18n';
+import { EMAIL, GITHUB_URL, LINKEDIN_URL } from '~/site';
 
 interface Props {
   lang: Lang;
@@ -9,9 +10,9 @@ const { lang } = Astro.props;
 const t = useTranslations(lang);
 
 const links = [
-  { label: 'GitHub', href: 'https://github.com/az198071123' },
-  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/kano-hong' },
-  { label: 'Email', href: 'mailto:az198071123@gmail.com' },
+  { label: 'GitHub', href: GITHUB_URL },
+  { label: 'LinkedIn', href: LINKEDIN_URL },
+  { label: 'Email', href: `mailto:${EMAIL}` },
 ];
 
 const year = new Date().getFullYear();

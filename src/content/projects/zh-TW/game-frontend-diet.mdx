@@ -2,8 +2,18 @@
 title: 遊戲前端瘦身：顯存 −92%、首訪下載 65→14 MB
 summary: 一款跑在手機瀏覽器的即時德州撲克，海外玩家反映首次載入很慢，iPhone 玩久了還會失去 WebGL context。我從量測開始，把貼圖、字型、協議程式碼和預快取一項一項拆開處理。
 year: '2026'
-role: Front-end Tech Lead
+role: Game Client Tech Lead
 company: 新數字有限公司（XGaming）
+impact:
+  role: '負責分析與實作，量測方法、改法和驗證都由我主導。'
+  results:
+    - 'GPU 貼圖顯存 492.56 → 40.52 MB（Android 真機、同一個牌桌場景）'
+    - '首次造訪下載量 65.25 → 13.96 MB（staging）'
+    - '字型檔 10.07 → 2.63 MB；協議產生碼 7.9 MB → 232 KB'
+  todo:
+    - '業務結果：首載完成率（改善前 → 後）'
+    - '業務結果：iPhone 重整／黑屏客訴（改善前 → 後）'
+    - '業務結果：CDN 流量（改善前 → 後）'
 stack:
   - Cocos Creator 3.8
   - Basis Universal 2.50
@@ -25,6 +35,7 @@ slug: game-frontend-diet
 import BeforeAfter from '~/components/BeforeAfter.astro';
 import TextureMemory from '~/components/demos/TextureMemory.astro';
 import DownloadMix from '~/components/demos/DownloadMix.astro';
+import Todo from '~/components/Todo.astro';
 
 <BeforeAfter
   caption="顯存與載入時間：Android 真機（Adreno 660）、同一個牌桌場景，每組 3 次、每次之間強制關閉 Chrome。下載量：staging 環境首次造訪。"
@@ -45,6 +56,8 @@ import DownloadMix from '~/components/demos/DownloadMix.astro';
 - **iPhone 玩一段時間後會失去 WebGL context**，只能重新整理。
 
 兩個問題看起來無關，其實都指向同一件事：我們送給手機的東西太多了，不管是網路上的下載量，還是 GPU 上的顯存。
+
+<Todo block text="實機 GIF：iPhone 玩久後失去 WebGL context（改前）與改後穩定遊玩的對照（素材待補）" />
 
 ## 我的角色
 
@@ -95,6 +108,8 @@ import DownloadMix from '~/components/demos/DownloadMix.astro';
 改法：預快取只留引擎與入口（約 4.5 MB），遊戲包改成用到時才下載，而且只抓裝置用的那一種格式；檔名帶 hash、CDN 設成永久快取，所以第二次造訪直接用瀏覽器快取。牌桌主題改成登入後只載玩家選的那一套。在 staging 實測，首次造訪下載量從 65.25 MB 降到 13.96 MB。
 
 <DownloadMix />
+
+<Todo block text="載入前後對比：同一台手機首次造訪，改前與改後並排錄影（素材待補）" />
 
 這等於推翻了原本「全部預快取、支援離線」的設計，所以我另外寫了一份 ADR 記錄原因：即時牌桌本來就需要網路，離線快取帶來的好處抵不過首訪成本。
 

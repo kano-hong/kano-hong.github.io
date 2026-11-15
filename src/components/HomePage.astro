@@ -5,6 +5,7 @@ import SectionHeading from '~/components/SectionHeading.astro';
 import ProjectCard from '~/components/ProjectCard.astro';
 import PostCard from '~/components/PostCard.astro';
 import Stats from '~/components/Stats.astro';
+import Todo from '~/components/Todo.astro';
 import { useTranslations, type Lang } from '~/i18n';
 
 interface Props {
@@ -34,23 +35,23 @@ const team =
         eyebrow: '帶團隊',
         title: '寫程式之外，我也負責讓整個團隊把東西送上線',
         stats: [
-          { value: '約 10 人', label: '帶領的 Cocos 前端團隊' },
-          { value: '190 個', label: '組員交給我審核合併的 MR' },
-          { value: '113 個', label: '擔任發版窗口 7 個月送出的 UAT 版本' },
-          { value: '13 次', label: '由我發起的 Prod 上版審批' },
+          { value: '約 3 週', label: '新玩法從零到 UAT（子遊戲框架上的第一款輪盤）' },
+          { value: '3 款', label: '一位隊友照我寫的開發指南做出的新遊戲' },
         ],
-        body: '面試 13 場以上、替新人訂 7 階段學習路線、制定 code review 流程、做績效考核。2024 年底推行上線審批流程，2025-08 起擔任德州撲克前端的發版窗口，彙整最多 5 位組員的變更送 UAT。數字來自 2024–2026 在新數字有限公司（XGaming）的 Lark 紀錄。',
+        beforeTodo: '「約 3 週」旁補改善前要幾週（HomePage.astro）',
+        minor: ['帶約 10 人的 Cocos 客戶端團隊', '審核合併組員 190 個 MR', '7 個月送出 113 個 UAT 版本', '發起 13 次 Prod 上版審批'],
+        body: '面試 13 場以上、替新人訂 7 階段學習路線、制定 code review 流程、做績效考核。2024 年底推行上線審批流程，2025 年 8 月起擔任德州撲克客戶端的發版窗口，彙整最多 5 位組員的變更送 UAT。數字來自 2024–2026 在新數字有限公司（XGaming）的 Lark 紀錄。',
       }
     : {
         eyebrow: 'Leading the team',
         title: 'Beyond my own code, I make sure the whole team ships',
         stats: [
-          { value: '~10', label: 'engineers on the Cocos front-end team I lead' },
-          { value: '190', label: 'merge requests teammates sent me to review and merge' },
-          { value: '113', label: 'UAT builds shipped in 7 months as release owner' },
-          { value: '13', label: 'production release approvals I filed' },
+          { value: '~3 weeks', label: 'from nothing to UAT for a new game mode (the first roulette on the sub-game framework)' },
+          { value: '3', label: 'new games a teammate built by following the development guide I wrote' },
         ],
-        body: 'I ran 13+ interviews, wrote a 7-stage onboarding path for new hires, set up the code review process and did performance reviews. In late 2024 I introduced a release approval process, and from 2025-08 I owned front-end releases for the Texas Hold’em products, batching changes from up to 5 teammates into each UAT build. Numbers come from Lark records at Newdigit Co., Ltd. (XGaming), 2024–2026.',
+        beforeTodo: 'add how many weeks it took before, next to “~3 weeks” (HomePage.astro)',
+        minor: ['Lead a ~10-engineer Cocos game client team', 'Reviewed and merged 190 merge requests', 'Shipped 113 UAT builds in 7 months', 'Filed 13 production release approvals'],
+        body: 'I ran 13+ interviews, wrote a 7-stage onboarding path for new hires, set up the code review process and did performance reviews. In late 2024 I introduced a release approval process, and since August 2025 I have owned client releases for the Texas Hold’em products, batching changes from up to 5 teammates into each UAT build. Numbers come from Lark records at Newdigit Co., Ltd. (XGaming), 2024–2026.',
       };
 ---
 
@@ -98,6 +99,10 @@ const team =
   <div class="wrap">
     <SectionHeading eyebrow={team.eyebrow} title={team.title} />
     <Stats items={team.stats} />
+    <Todo text={team.beforeTodo} />
+    <ul class="team-minor">
+      {team.minor.map((m) => <li>{m}</li>)}
+    </ul>
     <p class="team-body">{team.body}</p>
   </div>
 </section>
@@ -170,6 +175,23 @@ const team =
 
   .team-block {
     padding-top: 0;
+  }
+
+  .team-minor {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.5rem;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .team-minor li::before {
+    content: '· ';
+    color: var(--accent);
   }
 
   .team-body {

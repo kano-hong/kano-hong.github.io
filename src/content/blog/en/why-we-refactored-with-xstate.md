@@ -1,6 +1,6 @@
 ---
 title: One state machine, running in the game, unit tests and k6 load tests
-summary: The login, lobby and reconnect logic of a Texas Hold'em platform used to be scattered across scenes. I moved the flow into xstate machines and split definition from implementation, so the same machine runs in three environments, Cocos, Vitest and k6. This post covers how, and the pitfalls I actually hit.
+summary: The login, lobby and reconnect logic of a Texas Hold’em platform used to be scattered across scenes. I moved the flow into XState machines and split definition from implementation, so the same machine runs in three environments, Cocos, Vitest and k6. This post covers how, and the pitfalls I actually hit.
 date: 2026-11-15
 tags:
   - XState
@@ -18,7 +18,7 @@ This is the technical companion to "[Sub-game framework](/en/work/subgame-state-
 
 ## Where it started: three problems
 
-From late 2025 into early 2026, our Texas Hold'em platform needed several sub-games on the same WebSocket connection. There were three problems:
+From late 2025 into early 2026, our Texas Hold’em platform needed several sub-games on the same WebSocket connection. There were three problems:
 
 - **Reconnecting was a mess**: players got stuck when a reconnect failed; coming back from the background triggered duplicate reconnects; after reconnecting, the screen and the data sometimes disagreed.
 - **Sub-games had to share the flow**: login, lobby and reconnect couldn't be written again for every game.

@@ -1,11 +1,17 @@
 ---
 title: 'Sub-game framework: state machines and a registry that put a new game on UAT in about 3 weeks'
-summary: A Texas Hold'em platform needed roulette, 100-player Hold'em and other sub-games on the same connection, but login, lobby and reconnect logic were scattered across scenes. I split the flow into testable xstate machines and designed a sub-game registry; a teammate followed the dev guide to build 3 new games, and the load-test bots run the very same flow.
+summary: A Texas Hold’em platform needed roulette, 100-player Hold’em and other sub-games on the same connection, but login, lobby and reconnect logic were scattered across scenes. I split the flow into testable XState machines and designed a sub-game registry; a teammate followed the dev guide to build 3 new games, and the load-test bots run the very same flow.
 year: '2025–2026'
-role: Front-end Tech Lead
+role: Game Client Tech Lead
 company: Newdigit Co., Ltd. (XGaming)
+impact:
+  role: 'I designed the state-machine layering and the sub-game registry, wrote the dev guide, and built the first roulette game myself as the template. I also divided up the front-end work on the platform.'
+  results:
+    - 'The first roulette game went from zero to UAT in about 3 weeks'
+    - 'A teammate built 3 sub-games by following the guide, with no changes to the platform'
+    - '132 unit tests; the platform went live in production in February 2026'
 stack:
-  - xstate 5
+  - XState 5
   - TypeScript
   - MobX
   - Protobuf
@@ -45,7 +51,7 @@ import Video from '~/components/Video.astro';
 
 ## The problem
 
-This is a Texas Hold'em platform that, in early 2026, needed several sub-games on the same WebSocket connection: roulette, 100-player Hold'em, Golden Flower and Niu Niu. Three problems had to be solved together:
+This is a Texas Hold’em platform that, in early 2026, needed several sub-games on the same WebSocket connection: roulette, 100-player Hold’em, Golden Flower and Niu Niu. Three problems had to be solved together:
 
 - **Reconnecting was a mess.** Players got stuck when a reconnect failed; coming back from the background could trigger duplicate reconnects; after reconnecting, the screen and the data sometimes disagreed.
 - **Sub-games had to share the flow.** Login, lobby and reconnect couldn't be rewritten for every game, but the platform also couldn't end up knowing about every game.
@@ -53,11 +59,11 @@ This is a Texas Hold'em platform that, in early 2026, needed several sub-games o
 
 ## My role
 
-I designed the layering of the state machines and the sub-game registry, wrote the dev guide, and built the first roulette game myself as the template. A teammate followed the guide to build 100-player Hold'em, Golden Flower and Niu Niu. I also divided up the front-end work on the platform.
+I designed the layering of the state machines and the sub-game registry, wrote the dev guide, and built the first roulette game myself as the template. A teammate followed the guide to build 100-player Hold’em, Golden Flower and Niu Niu. I also divided up the front-end work on the platform.
 
 ## Decision 1: one machine per scene
 
-The top-level machine only tracks which scene you're in: loading, login, lobby or game. Entering a scene starts that scene's own child machine (xstate's `invoke`), and every event is forwarded to the current child (`forwardTo`).
+The top-level machine only tracks which scene you're in: loading, login, lobby or game. Entering a scene starts that scene's own child machine (XState’s `invoke`), and every event is forwarded to the current child (`forwardTo`).
 
 Each machine stays small and testable on its own. Adding `?inspect` to the URL opens Stately's live state chart, so while debugging you can see exactly which state you're stuck in.
 
@@ -105,7 +111,7 @@ gameRegistry.register({
 
 The WebSocket layer watches the registry (a MobX `reaction`). Whenever a new game registers, it builds that game's message handler and data model, and routes packets by `gameId`. Dependencies go one way only: sub-games can use the platform, and the platform never imports any sub-game.
 
-The dev guide sits at the top of the type definitions file, and adding a game takes 7 steps. That guide is what my teammate followed to build 100-player Hold'em, Golden Flower and Niu Niu.
+The dev guide sits at the top of the type definitions file, and adding a game takes 7 steps. That guide is what my teammate followed to build 100-player Hold’em, Golden Flower and Niu Niu.
 
 ## Try it
 
@@ -118,7 +124,7 @@ Below is a simplified top-level machine. Try disconnecting in the lobby, reconne
 - **The first roulette game went from zero to UAT in about 3 weeks**, including the wheel, betting area, chips, history, rebet and countdown. Two more roulette games were cloned from it, and the three together closed 13 UAT tickets.
 - **The platform went live in production in February 2026.**
 - **A teammate built 3 sub-games independently on the framework**, with no changes to the platform itself.
-- **132 unit tests** cover the machines and the sub-games, and a k6 integration test runs 100-player Hold'em end to end, from login to betting.
+- **132 unit tests** cover the machines and the sub-games, and a k6 integration test runs 100-player Hold’em end to end, from login to betting.
 
 <Video
   src="/videos/k6-roulette-bot.mp4"

@@ -2,8 +2,14 @@
 title: 'GitLab migration: 283 repos moved, 89 game builds green the next day'
 summary: The company's old GitLab was being retired, with 283 game and release repos, 86 per-game Jenkins jobs and over a hundred webhooks hanging off it. I drove the whole move from one mapping table, verified every repo before a single cutover, and used the move to fold the builds into group jobs and pull hard-coded credentials out of the scripts.
 year: '2026'
-role: Front-end Tech Lead
+role: Game Client Tech Lead
 company: Newdigit Co., Ltd. (XGaming)
+impact:
+  role: 'On the front-end side I owned everything from the inventory, planning new groups by product line and writing the migration scripts to running the cutover and verifying afterwards. Ops set up the new server; the back-end team moved their own repos.'
+  results:
+    - '283 repos verified one by one, then cut over at once'
+    - 'All 89 game builds passed the day after the cutover'
+    - '86 per-game Jenkins jobs → 6 group jobs; 112 webhooks created on the new server with 0 failures'
 stack:
   - GitLab API
   - Git LFS

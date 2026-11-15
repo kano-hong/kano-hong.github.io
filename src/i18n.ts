@@ -20,17 +20,17 @@ export const ui = {
     'nav.about': '關於',
     'nav.contact': '聯絡',
 
-    'hero.eyebrow': 'Front-end Tech Lead / 遊戲開發',
-    'hero.title.line1': '為遊戲',
-    'hero.title.line2': '寫一行行',
-    'hero.title.line3': '結構與秩序',
+    'hero.status': 'Open to work｜台灣新北（GMT+8）｜可遠端',
+    'hero.title.role': 'Cocos Creator 遊戲客戶端技術主管',
+    'hero.title.tags': '11 年｜H5 效能與架構｜帶過 10 人團隊',
+    'hero.motto': '為遊戲寫一行行結構與秩序。',
     'hero.subtitle':
-      '十一年遊戲產業工程經驗，2020 年起擔任前端 Lead。專注於 Cocos Creator、TypeScript、狀態機架構，以及把混亂的開發流程改造成可重複的系統。',
+      '2020 年起擔任遊戲客戶端 Lead。專注於 Cocos Creator、TypeScript、狀態機架構，以及把混亂的開發流程改造成可重複的系統。',
     'hero.cta.work': '看作品',
     'hero.cta.writing': '看文章',
 
     'home.work.eyebrow': '精選案例',
-    'home.work.title': '幾個我親手解過的問題',
+    'home.work.title': '幾個我解過的問題',
     'home.work.viewAll': '看全部作品 →',
 
     'home.writing.eyebrow': '近期文章',
@@ -40,7 +40,7 @@ export const ui = {
     'home.about.eyebrow': '關於',
     'home.about.title': '一個把 10 秒以上手動流程都寫成腳本的人',
     'home.about.body':
-      '我是 Kano（洪嘉濃）。過去十一年我在四家公司做遊戲，從拉霸、德州撲克、麻將、輪盤到捕魚機，全都動手寫過。現在是新數字有限公司（XGaming）的 Front-end Tech Lead。',
+      '我是 Kano（洪嘉濃）。過去十一年我在四家公司做遊戲，從拉霸、德州撲克、麻將、輪盤到捕魚機，全都動手寫過。現在是新數字有限公司（XGaming）的 Game Client Tech Lead。',
     'home.about.more': '更多關於我 →',
 
     'project.challenges': '面對的挑戰',
@@ -70,17 +70,17 @@ export const ui = {
     'nav.about': 'About',
     'nav.contact': 'Contact',
 
-    'hero.eyebrow': 'Front-end Tech Lead / Games',
-    'hero.title.line1': 'Writing structure',
-    'hero.title.line2': 'into the chaos',
-    'hero.title.line3': 'of game code',
+    'hero.status': 'Open to work · New Taipei, Taiwan (GMT+8) · Remote OK',
+    'hero.title.role': 'Game Client Tech Lead',
+    'hero.title.tags': 'Cocos Creator · 11 yrs · H5 performance & architecture',
+    'hero.motto': 'I bring structure and order to game code.',
     'hero.subtitle':
-      'Eleven years building games, leading front-end teams since 2020. Focused on Cocos Creator, TypeScript, state-machine architecture, and turning messy development pipelines into repeatable systems.',
+      'Leading game client teams since 2020. Focused on Cocos Creator, TypeScript, state-machine architecture, and turning messy development pipelines into repeatable systems.',
     'hero.cta.work': 'See work',
     'hero.cta.writing': 'Read writing',
 
     'home.work.eyebrow': 'Selected work',
-    'home.work.title': 'A few problems I solved by hand',
+    'home.work.title': 'A few problems I’ve solved',
     'home.work.viewAll': 'See all work →',
 
     'home.writing.eyebrow': 'Recent writing',
@@ -90,7 +90,7 @@ export const ui = {
     'home.about.eyebrow': 'About',
     'home.about.title': 'Anything manual over ten seconds becomes a script',
     'home.about.body':
-      "I'm Kano Hong. Eleven years of shipping games across four companies — slot, Texas Hold'em, mahjong, roulette, fishing. Currently Front-end Tech Lead at Newdigit Co., Ltd. (XGaming).",
+      'I’m Kano Hong. Eleven years of shipping games across four companies — slot, Texas Hold’em, mahjong, roulette, fishing. Currently Game Client Tech Lead at Newdigit Co., Ltd. (XGaming).',
     'home.about.more': 'More about me →',
 
     'project.challenges': 'Challenges',
@@ -107,7 +107,7 @@ export const ui = {
     'blog.back': '← Back to writing',
     'blog.readNext': 'Read next',
 
-    'footer.tagline': 'Code, and writing about code.',
+    'footer.tagline': 'I write code, and I write about it.',
     'footer.elsewhere': 'Elsewhere',
     'footer.colophon': 'Built with Astro, deployed on GitHub Pages.',
 

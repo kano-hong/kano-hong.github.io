@@ -289,6 +289,51 @@ img {
    Reusable components
    ============================================================ */
 
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  padding: 0.85rem 1.4rem;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: all var(--duration-base) var(--ease-out);
+  border: 1px solid transparent;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.btn-primary:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.btn-primary:hover span {
+  transform: translateX(3px);
+}
+
+.btn-primary span {
+  display: inline-block;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--rule);
+}
+
+.btn-ghost:hover {
+  border-color: var(--ink);
+  background: var(--paper-tint);
+}
+
 .eyebrow {
   font-family: var(--font-mono);
   font-size: var(--step--2);

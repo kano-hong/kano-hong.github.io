@@ -1,0 +1,28 @@
+---
+// 待補資料的標記：只在 npm run dev 顯示，正式 build 不輸出任何東西。
+interface Props { text: string; block?: boolean }
+const { text, block = false } = Astro.props;
+---
+{import.meta.env.DEV && (block
+  ? <div class="todo todo-block">TODO：{text}</div>
+  : <span class="todo">TODO：{text}</span>)}
+
+<style>
+  .todo {
+    display: inline-block;
+    padding: 0.15em 0.6em;
+    border: 1px dashed #c58a00;
+    border-radius: 3px;
+    background: #fff4cc;
+    color: #6b4a00;
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    line-height: 1.5;
+  }
+  .todo-block {
+    display: block;
+    margin: 2rem 0;
+    padding: 2.5rem 1rem;
+    text-align: center;
+  }
+</style>

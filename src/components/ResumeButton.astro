@@ -1,0 +1,13 @@
+---
+import { RESUME_PDF } from '~/site';
+import Todo from '~/components/Todo.astro';
+import type { Lang } from '~/i18n';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const pdf = RESUME_PDF[lang];
+---
+{pdf
+  ? <a class="btn btn-ghost" href={`${base}${pdf}`} download>{lang === 'zh-TW' ? '下載履歷（PDF）' : 'Download résumé (PDF)'}</a>
+  : <Todo text={lang === 'zh-TW' ? '履歷 PDF 路徑（src/site.ts）' : 'résumé PDF path (src/site.ts)'} />}

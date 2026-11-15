@@ -24,7 +24,7 @@ const segs = [
 const pct = (v: number) => `${((v / TOTAL) * 100).toFixed(2)}%`;
 const T = zh
   ? { label: '首次造訪下載量', replay: '重播', caption: 'staging 環境，真的 Chrome、全新設定檔，量背景 iframe 的首次造訪，頁面與 Service Worker 分開加總（傳輸量，2026-11-11）。' }
-  : { label: 'First-visit download', replay: 'Replay', caption: 'Staging, real Chrome with a fresh profile, measuring the background iframe’s first visit, with page and service worker counted separately (bytes transferred, 2026-11-11).' };
+  : { label: 'First-visit download', replay: 'Replay', caption: 'Staging, real Chrome with a fresh profile, measuring the background iframe’s first visit, with page and service worker counted separately (bytes transferred, November 11, 2026).' };
 ---
 
 <figure class="mix" data-mix data-from={TOTAL} data-to={segs.reduce((s, x) => s + x.after, 0).toFixed(2)}>

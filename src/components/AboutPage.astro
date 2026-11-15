@@ -1,19 +1,22 @@
 ---
-import { type Lang } from '~/i18n';
+import { useTranslations, type Lang } from '~/i18n';
+import ResumeButton from '~/components/ResumeButton.astro';
+import { EMAIL, GITHUB_URL, LINKEDIN_URL } from '~/site';
 
 interface Props {
   lang: Lang;
 }
 
 const { lang } = Astro.props;
+const t = useTranslations(lang);
 
 const title = lang === 'zh-TW' ? '關於我' : 'About';
 const eyebrow = lang === 'zh-TW' ? '個人介紹' : 'Bio';
 
 const intro =
   lang === 'zh-TW'
-    ? '我是 Kano Hong（洪嘉濃），Front-end Tech Lead，遊戲產業十一年。'
-    : "I'm Kano Hong, a Front-end Tech Lead with eleven years in the game industry.";
+    ? '我是 Kano Hong（洪嘉濃），Game Client Tech Lead，遊戲產業十一年。'
+    : 'I’m Kano Hong, a Game Client Tech Lead with eleven years in the game industry.';
 
 const story = lang === 'zh-TW'
   ? [
@@ -22,27 +25,27 @@ const story = lang === 'zh-TW'
       '工作之外我會把日常流程寫成腳本。我的原則是：如果一件事手動做超過十秒鐘，就值得寫成自動化。',
     ]
   : [
-      'I started with slot machines, then Texas Hold\'em, mahjong, roulette, fishing games — most of what you\'d find in a game lobby, I\'ve shipped a version of.',
-      'These days I\'m most interested in turning "the same pitfall every new project hits" into reusable infrastructure: sub-game registries, XState state management, MobX-Keystone data layers, Figma-to-Cocos automation plugins — all branches of the same instinct.',
+      'I started with slot machines, then Texas Hold’em, mahjong, roulette, fishing games — most of what you’d find in a game lobby, I’ve shipped a version of.',
+      'These days I’m most interested in turning "the same pitfall every new project hits" into reusable infrastructure: sub-game registries, XState state management, MobX-Keystone data layers, Figma-to-Cocos automation plugins — all branches of the same instinct.',
       'Outside work I script my way through everyday tasks. My rule: if it takes more than ten seconds by hand, it deserves automation.',
     ];
 
 const facts = lang === 'zh-TW'
   ? [
-      { label: '現職', value: 'Front-end Tech Lead' },
+      { label: '現職', value: 'Game Client Tech Lead' },
       { label: '公司', value: '新數字有限公司' },
       { label: '經歷', value: '11 年遊戲產業 / 4 家公司' },
       { label: '語言', value: '繁體中文（母語）· English' },
     ]
   : [
-      { label: 'Role', value: 'Front-end Tech Lead' },
+      { label: 'Role', value: 'Game Client Tech Lead' },
       { label: 'Company', value: 'Newdigit Co., Ltd.' },
       { label: 'Experience', value: '11 years across 4 companies' },
       { label: 'Languages', value: 'Traditional Chinese (native) · English' },
     ];
 
 const stack = [
-  'Cocos Creator 3.x', 'TypeScript', 'xstate 5', 'MobX', 'Protobuf / WebSocket',
+  'Cocos Creator 3.x', 'TypeScript', 'XState 5', 'MobX', 'Protobuf / WebSocket',
   'WebGL · Basis Universal / ASTC', 'PWA · Workbox', 'Vitest', 'k6',
   'Node.js', 'Docker Compose', 'Nginx', 'Jenkins', 'GitLab API',
   'Prometheus / Grafana', 'ELK', 'Python', 'Claude Code · MCP',
@@ -51,21 +54,21 @@ const stack = [
 
 const timeline = lang === 'zh-TW'
   ? [
-      { when: '2024.02 – 至今', where: '新數字有限公司（XGaming）', role: 'Front-end Tech Lead', what: '帶約 10 人的 Cocos 團隊，負責德州撲克的 Web／PWA、原生 App、Telegram Mini App 與子遊戲平台；2026 年起兼管 CI/CD 與正式環境維運。' },
+      { when: '2024.02 – 至今', where: '新數字有限公司（XGaming）', role: 'Game Client Tech Lead', what: '帶約 10 人的 Cocos 團隊，負責德州撲克的 Web／PWA、原生 App、Telegram Mini App 與子遊戲平台；2026 年起兼管 CI/CD 與正式環境維運。' },
       { when: '2020.08 – 2024.02', where: '樂榮科技', role: 'FrontEnd Develop Lead', what: '主導前端由 PixiJS 轉 Cocos Creator、建立 CI/CD；開發德州撲克與小遊戲。' },
       { when: '2019.03 – 2020.08', where: '奇點數位科技', role: '程式主任', what: '主導前端由 Egret 轉 Cocos Creator，兼做後台（Django、Vue）；開發 Slot 與撲克。' },
       { when: '2013.07 – 2019.03', where: '向上國際科技', role: 'Senior Mobile Game Programmer', what: '以 Cocos2d-x／Cocos Creator 開發 Slot、棋牌與視訊遊戲，參與組建研發團隊。' },
     ]
   : [
-      { when: '2024.02 – now', where: 'Newdigit Co., Ltd. (XGaming)', role: 'Front-end Tech Lead', what: 'Lead a ~10-engineer Cocos team across Texas Hold’em (web/PWA, native apps, Telegram Mini App) and a sub-game platform; since 2026 I also own CI/CD and production operations.' },
+      { when: '2024.02 – now', where: 'Newdigit Co., Ltd. (XGaming)', role: 'Game Client Tech Lead', what: 'Lead a ~10-engineer Cocos team across Texas Hold’em (web/PWA, native apps, Telegram Mini App) and a sub-game platform; since 2026 I also own CI/CD and production operations.' },
       { when: '2020.08 – 2024.02', where: 'ArionLabs', role: 'FrontEnd Develop Lead', what: 'Led the front-end move from PixiJS to Cocos Creator and set up CI/CD; built Texas Hold’em and casual games.' },
       { when: '2019.03 – 2020.08', where: 'Singularity', role: 'Senior Software Engineer', what: 'Led the front-end move from Egret to Cocos Creator and built back-office tools (Django, Vue); shipped slot and poker games.' },
       { when: '2013.07 – 2019.03', where: 'XSG Group', role: 'Senior Mobile Game Programmer', what: 'Built slot, card and live-dealer games with Cocos2d-x and Cocos Creator, and helped build up the R&D team.' },
     ];
 
 const genresShipped = lang === 'zh-TW'
-  ? ['拉霸 Slot', '德州撲克 Texas Hold\'em', '麻將 Mahjong', '輪盤 Roulette', '捕魚機 Fishing']
-  : ['Slot', "Texas Hold'em", 'Mahjong', 'Roulette', 'Fishing'];
+  ? ['拉霸 Slot', '德州撲克 Texas Hold’em', '麻將 Mahjong', '輪盤 Roulette', '捕魚機 Fishing']
+  : ['Slot', 'Texas Hold’em', 'Mahjong', 'Roulette', 'Fishing'];
 ---
 
 <section class="page-head">
@@ -89,7 +92,7 @@ const genresShipped = lang === 'zh-TW'
       <p class="clips-intro">
         {lang === 'zh-TW'
           ? '我帶團隊做過的德州撲克、子遊戲平台與 Slot，錄成短片放在產品頁。'
-          : 'The Texas Hold’em, sub-game and slot front-ends my team built are recorded as short clips on the products page.'}
+          : 'The Texas Hold’em, sub-game and slot front ends my team built are recorded as short clips on the products page.'}
       </p>
       <a class="clips-link" href={lang === 'zh-TW' ? '/products/' : '/en/products/'}>{lang === 'zh-TW' ? '看產品實錄 →' : 'See the product clips →'}</a>
     </div>
@@ -145,15 +148,22 @@ const genresShipped = lang === 'zh-TW'
 
     <div class="contact-block">
       <h2 class="block-heading">{lang === 'zh-TW' ? '聯絡' : 'Get in touch'}</h2>
+      <p class="contact-status">{t('hero.status')}</p>
       <p>
         {lang === 'zh-TW'
           ? '工作機會、合作邀請、技術討論都歡迎。'
-          : "Open to work opportunities, collaborations, and technical discussions."}
+          : 'Open to work opportunities, collaborations, and technical discussions.'}
       </p>
+      <div class="contact-cta">
+        <a class="btn btn-primary" href={`mailto:${EMAIL}?subject=${encodeURIComponent(lang === 'zh-TW' ? '職缺洽談' : 'Job opportunity')}`}>
+          {lang === 'zh-TW' ? '聊聊職缺' : 'Talk about a role'} <span aria-hidden="true">→</span> Email
+        </a>
+        <ResumeButton lang={lang} />
+      </div>
       <ul class="contact-list">
-        <li><a href="mailto:az198071123@gmail.com">az198071123@gmail.com</a></li>
-        <li><a href="https://github.com/az198071123" target="_blank" rel="noopener noreferrer">github.com/az198071123</a></li>
-        <li><a href="https://www.linkedin.com/in/kano-hong" target="_blank" rel="noopener noreferrer">linkedin.com/in/kano-hong</a></li>
+        <li><a href={`mailto:${EMAIL}`}>{EMAIL}</a></li>
+        <li><a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">{GITHUB_URL.replace('https://', '')}</a></li>
+        <li><a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer">{LINKEDIN_URL.replace('https://www.', '')}</a></li>
       </ul>
     </div>
   </div>
@@ -294,6 +304,21 @@ const genresShipped = lang === 'zh-TW'
     color: var(--ink-soft);
     line-height: 1.6;
     max-width: 56ch;
+  }
+
+  .contact-status {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+  }
+
+  .contact-cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.25rem;
   }
 
   .contact-list {

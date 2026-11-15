@@ -2,8 +2,14 @@
 title: 'Real-money releases in production: an 8-server canary and zero 5xx after each release'
 summary: A slot platform's Node.js game servers, 8 of them in production, handling real players' bets. I turned releases into a repeatable canary process and fixed the bug that made all 8 crash together whenever the database dropped.
 year: '2026'
-role: Front-end Tech Lead (also running production ops)
+role: Game Client Tech Lead (also running production ops)
 company: Newdigit Co., Ltd. (XGaming)
+impact:
+  role: 'I owned production releases and monitoring, and found and fixed the root cause of the crashes. The back-end lead maintains the server code.'
+  results:
+    - '5 canary releases, with 0 Nginx 5xx after each'
+    - 'Servers crashing on a database disconnect: 8 → 0'
+    - 'Database connections per server: 22–44 → 4–5'
 stack:
   - Node.js
   - Docker Compose
@@ -48,7 +54,7 @@ import Video from '~/components/Video.astro';
 In October 2026 this slot platform's game servers moved from K8s to a single Docker host: 8 game-server containers on one production machine, with every spin touching a player's wallet. When I took over operations there were two problems:
 
 - **No set way to release.** Every release was a real-money change, without a procedure that could be repeated and verified.
-- **When the database dropped, all 8 crashed.** The database dropped twice in late October, and both times the servers crashed. On 10-30 all 8 containers exited within 40 ms of the disconnect and restarted, and bets in flight got no response.
+- **When the database dropped, all 8 crashed.** The database dropped twice in late October, and both times the servers crashed. On October 30 all 8 containers exited within 40 ms of the disconnect and restarted, and bets in flight got no response.
 
 ## My role
 

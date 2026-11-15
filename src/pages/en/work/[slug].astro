@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import ImpactBox from '~/components/ImpactBox.astro';
 import { useTranslations } from '~/i18n';
 
 export async function getStaticPaths() {
@@ -36,6 +37,12 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
         <p class="project-summary serif-italic">{project.data.summary}</p>
       </div>
+
+      {project.data.impact && (
+        <div class="wrap-narrow">
+          <ImpactBox lang="en" impact={project.data.impact} />
+        </div>
+      )}
 
       <div class="wrap-narrow">
         <dl class="meta-grid">

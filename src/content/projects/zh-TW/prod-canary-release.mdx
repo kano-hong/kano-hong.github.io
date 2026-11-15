@@ -2,8 +2,14 @@
 title: 真錢遊戲的 Prod 換版：8 台金絲雀、換版後 5xx 為 0
 summary: 一個 Slot 平台的 Node.js 遊戲伺服器，8 台跑在正式環境、處理真實玩家的下注。我把換版做成一套可重複的金絲雀流程，並修好「資料庫一斷線、8 台就一起崩潰」的缺陷。
 year: '2026'
-role: Front-end Tech Lead（兼 Prod 維運）
+role: Game Client Tech Lead（兼 Prod 維運）
 company: 新數字有限公司（XGaming）
+impact:
+  role: '負責正式環境的換版與監控，並找出、修正崩潰的根因。伺服器程式由後端負責人維護。'
+  results:
+    - '5 次金絲雀換版，換版後 Nginx 5xx 為 0'
+    - '資料庫斷線時崩潰的伺服器 8 台 → 0 台'
+    - '每台資料庫連線 22–44 條 → 4–5 條'
 stack:
   - Node.js
   - Docker Compose

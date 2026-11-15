@@ -2,8 +2,14 @@
 title: GitLab 整站遷移：283 個 repo 搬家，隔天 89 款遊戲建置全綠
 summary: 公司舊的 GitLab 要停用，上面掛著 283 個遊戲與發布 repo、86 個逐遊戲的 Jenkins job 和上百個 webhook。我用一份對照表驅動整個搬遷，逐一校驗後一次切換，同時把建置流程收斂成群組 job、把寫死在腳本裡的帳密移出來。
 year: '2026'
-role: Front-end Tech Lead
+role: Game Client Tech Lead
 company: 新數字有限公司（XGaming）
+impact:
+  role: '前端這一側從盤點、依產品線規劃新群組、寫遷移腳本，到切換當天的操作與事後驗證都由我負責。新站由運維架設，後端 repo 由後端團隊自己搬。'
+  results:
+    - '283 個 repo 逐一校驗後一次切換'
+    - '切換隔天 89 款遊戲建置全部通過'
+    - '逐遊戲 Jenkins job 86 → 6 個群組 job；新站 112 個 webhook 建立 0 失敗'
 stack:
   - GitLab API
   - Git LFS

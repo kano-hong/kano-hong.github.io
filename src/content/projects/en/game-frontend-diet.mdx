@@ -1,9 +1,19 @@
 ---
 title: 'Slimming a game front end: GPU memory −92%, first visit 65 → 14 MB'
-summary: A real-time Texas Hold'em game running in mobile browsers. Players overseas said the first load was slow, and iPhones lost their WebGL context after a while. I started by measuring, then took on textures, fonts, protocol code and precaching one at a time.
+summary: A real-time Texas Hold’em game running in mobile browsers. Players overseas said the first load was slow, and iPhones lost their WebGL context after a while. I started by measuring, then took on textures, fonts, protocol code and precaching one at a time.
 year: '2026'
-role: Front-end Tech Lead
+role: Game Client Tech Lead
 company: Newdigit Co., Ltd. (XGaming)
+impact:
+  role: 'I did the analysis and the implementation, and led the measurement method, the fixes and the verification.'
+  results:
+    - 'GPU texture memory 492.56 → 40.52 MB (real Android device, same table scene)'
+    - 'First-visit download 65.25 → 13.96 MB (staging)'
+    - 'Font file 10.07 → 2.63 MB; generated protocol code 7.9 MB → 232 KB'
+  todo:
+    - 'Business result: first-load completion rate (before → after)'
+    - 'Business result: iPhone reload / black-screen complaints (before → after)'
+    - 'Business result: CDN traffic (before → after)'
 stack:
   - Cocos Creator 3.8
   - Basis Universal 2.50
@@ -25,6 +35,7 @@ slug: game-frontend-diet
 import BeforeAfter from '~/components/BeforeAfter.astro';
 import TextureMemory from '~/components/demos/TextureMemory.astro';
 import DownloadMix from '~/components/demos/DownloadMix.astro';
+import Todo from '~/components/Todo.astro';
 
 <BeforeAfter
   caption="GPU memory and load time: a real Android phone (Adreno 660), the same table scene, 3 runs per variant with Chrome force-stopped between runs. Download size: first visit on staging."
@@ -45,6 +56,8 @@ This poker game runs in mobile browsers and as a PWA. At the time there were two
 - **iPhones lost their WebGL context after a while of play**, and the only way out was a reload.
 
 They look unrelated, but both pointed to the same thing: we were sending phones too much, both in download size over the network and in memory on the GPU.
+
+<Todo block text="Real-device GIF: an iPhone losing its WebGL context after long play (before) vs. playing steadily (after); footage needed" />
 
 ## My role
 
@@ -95,6 +108,8 @@ The main site preloads the table in a background iframe. Measuring it showed tha
 The fix: precache only the engine and the entry point (about 4.5 MB). The game bundle downloads when it is needed, and only in the format the device uses. Filenames carry a hash and the CDN caches them forever, so a second visit comes straight from the browser cache. Table themes now load only the player's choice, after login. On staging, the first-visit download went from 65.25 MB to 13.96 MB.
 
 <DownloadMix lang="en" />
+
+<Todo block text="Load before/after: the same phone’s first visit, before and after, recorded side by side; footage needed" />
 
 This overturned the original "precache everything, work offline" design, so I wrote an ADR recording why: a live poker table needs the network anyway, and the offline cache wasn't worth what it cost on the first visit.
 
