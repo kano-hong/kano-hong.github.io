@@ -45,7 +45,7 @@ const navItems = [
       </ul>
     </nav>
 
-    <a class="lang-switch" href={switchPath} aria-label={`Switch to ${otherLang}`}>
+    <a class="lang-switch" href={switchPath} aria-label={`Switch to ${otherLang}`} onclick={`try{localStorage.setItem('lang','${otherLang}')}catch(e){}`}>
       {t('lang.switch')}
     </a>
   </div>

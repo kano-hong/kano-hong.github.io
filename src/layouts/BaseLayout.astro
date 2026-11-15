@@ -2,7 +2,7 @@
 import '~/styles/global.css';
 import Header from '~/components/Header.astro';
 import Footer from '~/components/Footer.astro';
-import { getLangFromUrl, useTranslations, type Lang } from '~/i18n';
+import { getLangFromUrl, switchLangPath, useTranslations, type Lang } from '~/i18n';
 
 interface Props {
   title: string;
@@ -23,6 +23,9 @@ const desc =
 
 const fullTitle = title.includes('Kano') ? title : `${title} — Kano Hong`;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const withSlash = (p: string) => (p.endsWith('/') ? p : `${p}/`);
+const zhURL = new URL(withSlash(switchLangPath(Astro.url.pathname, 'zh-TW')), Astro.site);
+const enURL = new URL(withSlash(switchLangPath(Astro.url.pathname, 'en')), Astro.site);
 const ogImageURL = ogImage
   ? new URL(ogImage, Astro.site).toString()
   : new URL(lang === 'en' ? '/og-default-en.png' : '/og-default.png', Astro.site).toString();
@@ -39,6 +42,21 @@ const ogImageURL = ogImage
     <title>{fullTitle}</title>
     <meta name="description" content={desc} />
     <link rel="canonical" href={canonicalURL} />
+    <link rel="alternate" hreflang="zh-Hant-TW" href={zhURL} />
+    <link rel="alternate" hreflang="en" href={enURL} />
+    <link rel="alternate" hreflang="x-default" href={zhURL} />
+    {lang === 'zh-TW' && (
+      <script is:inline>
+        // 瀏覽器語言沒有中文、也沒手動選過語言時，第一次就帶到英文版同一頁。爬蟲不轉。
+        (function () {
+          try { if (localStorage.getItem('lang')) return; } catch (e) {}
+          if (/bot|crawl|spider|slurp|preview|facebookexternalhit/i.test(navigator.userAgent)) return;
+          var langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
+          for (var i = 0; i < langs.length; i++) if (/^zh/i.test(langs[i])) return;
+          location.replace('/en' + location.pathname + location.search + location.hash);
+        })();
+      </script>
+    )}
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
