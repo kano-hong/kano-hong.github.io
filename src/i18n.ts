@@ -15,6 +15,7 @@ export const defaultLang: Lang = 'zh-TW';
 export const ui = {
   'zh-TW': {
     'nav.work': '作品',
+    'nav.products': '產品',
     'nav.writing': '寫作',
     'nav.about': '關於',
     'nav.contact': '聯絡',
@@ -64,6 +65,7 @@ export const ui = {
   },
   en: {
     'nav.work': 'Work',
+    'nav.products': 'Products',
     'nav.writing': 'Writing',
     'nav.about': 'About',
     'nav.contact': 'Contact',
