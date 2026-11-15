@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- 作品集公開版（無電話）。來源：Claude Design 一頁式履歷 C 版。重印：npm run resume -->
+<meta charset="utf-8">
+<title>Kano Hong 洪嘉濃 Résumé</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&amp;family=Noto+Sans+TC:wght@400;500;700&amp;family=Noto+Serif+TC:wght@600;700&amp;display=swap">
+<style>
+body{margin:0;background:#ffffff}
+a{color:#1f2328}a:hover{color:#57606a}
+</style>
+<style>@page{size:A4;margin:0}</style>
+</head>
+<body>
+<div style="width: 794px; height: 1123px; box-sizing: border-box; padding: 44px 60px; background: #ffffff; font-family: 'Source Sans 3', 'Noto Sans TC', sans-serif; color: #1f2328; display: flex; flex-direction: column; gap: 14px">
+
+<header style="display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center">
+<h1 style="margin: 0; font-family: 'Noto Serif TC', serif; font-size: 32px; line-height: 1.2; font-weight: 700; letter-spacing: 2px">Kano Hong <span style="font-size: 20px; font-weight: 600; letter-spacing: 1px; color: #57606a">洪嘉濃</span></h1>
+<p style="margin: 0; font-size: 14px; font-weight: 500; color: #7C2D12">Game Client Tech Lead · Cocos game client &amp; platform operations</p>
+<p style="margin: 0; font-size: 12px; line-height: 1.5; color: #424a53"><a href="https://linkedin.com/in/kano-hong" style="text-decoration: none">linkedin.com/in/kano-hong</a> · <a href="mailto:az198071123@gmail.com" style="text-decoration: none">az198071123@gmail.com</a> · New Taipei, Taiwan (remote OK)</p>
+</header>
+
+<section style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 12px">
+<h2 style="margin: 0; font-family: 'Noto Serif TC', serif; font-size: 15px; font-weight: 700; color: #7C2D12">Summary</h2>
+<div style="flex: 1; height: 1px; background: #8c959f"></div>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 1.6">Game client tech lead with 11 years in the game industry, about 10 of them on Cocos. I lead a team of about 10 shipping real-time online games: Texas Hold’em, slots and coin pushers. My focus is game client architecture and WebGL loading and memory; since 2026 I also own CI/CD and production operations.</p>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 7px">
+<div style="display: flex; align-items: center; gap: 12px">
+<h2 style="margin: 0; font-family: 'Noto Serif TC', serif; font-size: 15px; font-weight: 700; color: #7C2D12">Experience</h2>
+<div style="flex: 1; height: 1px; background: #8c959f"></div>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px">
+<h3 style="margin: 0; font-size: 14.5px; line-height: 1.5; font-weight: 700">Newdigit Co., Ltd. (XGaming) | Game Client Tech Lead</h3>
+<span style="font-size: 12.5px; color: #57606a; white-space: nowrap">2024.02 – 2026.11</span>
+</div>
+
+<h4 style="margin: 2px 0 0; font-size: 12.5px; line-height: 1.5; font-weight: 700; color: #57606a">Client architecture &amp; performance</h4>
+<ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; line-height: 1.45; color: #32383f">
+<li><strong style="color: #1f2328">GPU texture memory −92% (492→40 MB)</strong>: brought Basis Universal / XUASTC compression into CI, and fixed the memory leak that made iPhones lose their WebGL context.</li>
+<li><strong style="color: #1f2328">First visit 65→14 MB (−78%), first-visit blank wait 2,101→46 ms</strong>: stopped precaching the game bundle in the service worker and deferred its registration, subset the fonts (10→2.6 MB), and switched Protobuf to reflection-based code (7.9 MB→232 KB).</li>
+<li><strong style="color: #1f2328">New game modes reach UAT in about 3 weeks</strong>: designed hierarchical XState machines and a sub-game registry, so web / PWA, native apps and the Telegram Mini App share one WebSocket / Protobuf layer.</li>
+</ul>
+
+<h4 style="margin: 4px 0 0; font-size: 12.5px; line-height: 1.5; font-weight: 700; color: #57606a">Platform &amp; operations (added in the second half of 2026)</h4>
+<ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; line-height: 1.45; color: #32383f">
+<li><strong style="color: #1f2328">All 89 game builds passed after a full GitLab migration</strong>: verified 283 repos one by one before the cutover, created 112 webhooks, and consolidated 86 Jenkins jobs into group jobs.</li>
+<li><strong style="color: #1f2328">Deploys 27 min→193 s, images 1 GB→296 MB</strong>: wrote a build-and-deploy tool and moved multi-brand game servers to Docker Compose in production.</li>
+<li><strong style="color: #1f2328">5 production releases with 0 5xx; 0 restarts on a database disconnect</strong>: canary releases across 8 servers, fixed the connection-pool defect, and built host alerting and Grafana monitoring for nearly 100 services.</li>
+</ul>
+
+<h4 style="margin: 4px 0 0; font-size: 12.5px; line-height: 1.5; font-weight: 700; color: #57606a">Team &amp; AI engineering</h4>
+<ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; line-height: 1.45; color: #32383f">
+<li><strong style="color: #1f2328">Lead a Cocos team of about 10</strong>: as release owner, shipped 113 UAT builds and filed 13 production release approvals in 7 months; ran 13+ interviews, set up code review, onboarded new hires and ran performance reviews.</li>
+<li><strong style="color: #1f2328">About half of my commits since May 2026 made with Claude Code</strong>: built 10+ skills, a guard hook for dangerous commands (verified against 14,693 past commands) and nightly automated checks.</li>
+</ul>
+
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-top: 8px">
+<h3 style="margin: 0; font-size: 14px; line-height: 1.5; font-weight: 700">ArionLabs | FrontEnd Develop Lead</h3>
+<span style="font-size: 12.5px; color: #57606a; white-space: nowrap">2020.08 – 2024.02</span>
+</div>
+<p style="margin: 0; font-size: 12.5px; line-height: 1.4; color: #32383f">Led the front-end move from PixiJS to Cocos Creator and set up CI/CD; built Texas Hold’em and casual games.</p>
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-top: 4px">
+<h3 style="margin: 0; font-size: 14px; line-height: 1.5; font-weight: 700">Singularity | Senior Software Engineer</h3>
+<span style="font-size: 12.5px; color: #57606a; white-space: nowrap">2019.03 – 2020.08</span>
+</div>
+<p style="margin: 0; font-size: 12.5px; line-height: 1.4; color: #32383f">Led the front-end move from Egret to Cocos Creator and built back-office tools (Django, Vue); shipped slot and poker games.</p>
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-top: 4px">
+<h3 style="margin: 0; font-size: 14px; line-height: 1.5; font-weight: 700">XSG Group | Senior Mobile Game Programmer</h3>
+<span style="font-size: 12.5px; color: #57606a; white-space: nowrap">2013.07 – 2019.03</span>
+</div>
+<p style="margin: 0; font-size: 12.5px; line-height: 1.4; color: #32383f">Built slot, card and live-dealer games with Cocos2d-x and Cocos Creator, and helped build up the R&amp;D team.</p>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 12px">
+<h2 style="margin: 0; font-family: 'Noto Serif TC', serif; font-size: 15px; font-weight: 700; color: #7C2D12">Skills</h2>
+<div style="flex: 1; height: 1px; background: #8c959f"></div>
+</div>
+<div style="display: grid; grid-template-columns: 96px minmax(0, 1fr); row-gap: 3px; column-gap: 12px; font-size: 12.5px; line-height: 1.6">
+<span style="font-weight: 700; color: #424a53">Client &amp; engine</span>
+<span>TypeScript, Cocos Creator 3.8 (in-house engine fork), WebGL, Spine, XState, PWA / Service Worker</span>
+<span style="font-weight: 700; color: #424a53">Networking</span>
+<span>WebSocket, Protobuf, MQTT, REST</span>
+<span style="font-weight: 700; color: #424a53">Platform &amp; ops</span>
+<span>Jenkins, GitLab, Docker Compose, Nginx, Prometheus / Grafana, ELK</span>
+<span style="font-weight: 700; color: #424a53">Back end &amp; data</span>
+<span>Go, Node.js, MongoDB, MySQL, Redis</span>
+<span style="font-weight: 700; color: #424a53">AI tools</span>
+<span>Claude Code (skills, hooks, sub-agents), MCP (Lark, Chrome DevTools, Figma)</span>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 12px">
+<h2 style="margin: 0; font-family: 'Noto Serif TC', serif; font-size: 15px; font-weight: 700; color: #7C2D12">Education</h2>
+<div style="flex: 1; height: 1px; background: #8c959f"></div>
+</div>
+<p style="margin: 0; font-size: 12.5px; line-height: 1.6">Overseas Chinese University | Information Management, graduated</p>
+</section>
+
+</div>
+</body>
+</html>

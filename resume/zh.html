@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<!-- 作品集公開版（無電話）。來源：Claude Design 一頁式履歷 C 版。重印：npm run resume -->
+<meta charset="utf-8">
+<title>洪嘉濃 Kano Hong 履歷</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&amp;family=Noto+Serif+TC:wght@600;700&amp;display=swap">
+<style>
+body{margin:0;background:#ffffff}
+a{color:#1f2328}a:hover{color:#57606a}
+</style>
+<style>@page{size:A4;margin:0}</style>
+</head>
+<body>
+<div style="width: 794px; height: 1123px; box-sizing: border-box; padding: 44px 60px; background: #ffffff; font-family: 'Noto Sans TC', 'PingFang TC', sans-serif; color: #1f2328; display: flex; flex-direction: column; gap: 14px">
+
+<header style="display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center">
+<h1 style="margin: 0; font-family: 'Noto Serif TC', serif; font-size: 32px; line-height: 1.2; font-weight: 700; letter-spacing: 2px">洪嘉濃 <span style="font-size: 20px; font-weight: 600; letter-spacing: 1px; color: #57606a">Kano Hong</span></h1>
+<p style="margin: 0; font-size: 14px; font-weight: 500; color: #7C2D12">Game Client Tech Lead · Cocos 遊戲客戶端與平台維運</p>
+<p style="margin: 0; font-size: 12px; line-height: 1.5; color: #424a53"><a href="https://linkedin.com/in/kano-hong" style="text-decoration: none">linkedin.com/in/kano-hong</a> · <a href="mailto:az198071123@gmail.com" style="text-decoration: none">az198071123@gmail.com</a> · 台灣新北（可遠端）</p>
+</header>
+
+<section style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 12px">
+<h2 style="margin: 0; font-family: 'Noto Serif TC', serif; font-size: 15px; font-weight: 700; color: #7C2D12">簡介</h2>
+<div style="flex: 1; height: 1px; background: #8c959f"></div>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 1.6">遊戲產業 11 年、Cocos 約 10 年的遊戲客戶端 Tech Lead，帶領約 10 人團隊交付德州撲克、Slot、推幣機等即時連線遊戲。專長是遊戲前端架構與 WebGL 載入、記憶體優化；2026 年起兼任 CI/CD 與 Prod 維運。</p>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 7px">
+<div style="display: flex; align-items: center; gap: 12px">
+<h2 style="margin: 0; font-family: 'Noto Serif TC', serif; font-size: 15px; font-weight: 700; color: #7C2D12">經歷</h2>
+<div style="flex: 1; height: 1px; background: #8c959f"></div>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px">
+<h3 style="margin: 0; font-size: 14.5px; line-height: 1.5; font-weight: 700">新數字有限公司（XGaming）｜Game Client Tech Lead</h3>
+<span style="font-size: 12.5px; color: #57606a; white-space: nowrap">2024.02 – 2026.11</span>
+</div>
+
+<h4 style="margin: 2px 0 0; font-size: 12.5px; line-height: 1.5; font-weight: 700; color: #57606a">前端架構與效能</h4>
+<ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 1.55; color: #32383f">
+<li><strong style="color: #1f2328">GPU 貼圖記憶體減少 92%（492→40 MB）</strong>：導入 Basis Universal／XUASTC 壓縮並接進 CI，同時修掉 iPhone 失去 WebGL context 的記憶體洩漏。</li>
+<li><strong style="color: #1f2328">首次載入 65→14 MB（−78%）、首訪空白等待 2,101→46 ms</strong>：Service Worker 不再預快取遊戲包並延後註冊、字型子集化（10→2.6 MB）、Protobuf 改反射式產碼（7.9 MB→232 KB）。</li>
+<li><strong style="color: #1f2328">新玩法約 3 週上 UAT</strong>：設計 XState 階層狀態機與子遊戲註冊框架，讓 Web／PWA、原生 App、Telegram Mini App 共用 WebSocket／Protobuf 層。</li>
+</ul>
+
+<h4 style="margin: 4px 0 0; font-size: 12.5px; line-height: 1.5; font-weight: 700; color: #57606a">平台與維運（2026 下半年兼任）</h4>
+<ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 1.55; color: #32383f">
+<li><strong style="color: #1f2328">GitLab 整站遷移後 89 款遊戲建置全數通過</strong>：283 個 repo 逐一校驗後切換，建立 112 個 webhook，86 個 Jenkins job 收斂成群組 job。</li>
+<li><strong style="color: #1f2328">部署 27 分鐘→193 秒、映像 1 GB→296 MB</strong>：自寫建置部署工具，多品牌遊戲伺服器改用 Docker Compose 上線 Prod。</li>
+<li><strong style="color: #1f2328">Prod 換版 5 次 5xx 為 0、資料庫斷線 0 次重啟</strong>：8 台金絲雀換版、修正連線池缺陷，並自建主機告警與 Grafana 監控近百個服務。</li>
+</ul>
+
+<h4 style="margin: 4px 0 0; font-size: 12.5px; line-height: 1.5; font-weight: 700; color: #57606a">團隊與 AI 工程</h4>
+<ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 1.55; color: #32383f">
+<li><strong style="color: #1f2328">帶領約 10 人 Cocos 團隊</strong>：擔任發版窗口，7 個月送出 113 個 UAT 版本、13 次 Prod 上版審批；面試 13 場以上、制定 code review 流程、帶新人與績效考核。</li>
+<li><strong style="color: #1f2328">2026-05 起約半數 commit 與 Claude Code 協作</strong>：自建十多個 skill、危險指令攔截 hook（以 14,693 條歷史指令驗證）與夜間自動檢查。</li>
+</ul>
+
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-top: 8px">
+<h3 style="margin: 0; font-size: 14px; line-height: 1.5; font-weight: 700">樂榮科技｜FrontEnd Develop Lead</h3>
+<span style="font-size: 12.5px; color: #57606a; white-space: nowrap">2020.08 – 2024.02</span>
+</div>
+<p style="margin: 0; font-size: 12.5px; line-height: 1.5; color: #32383f">主導前端由 PixiJS 轉 Cocos Creator、建立 CI/CD；開發德州撲克與小遊戲。</p>
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-top: 4px">
+<h3 style="margin: 0; font-size: 14px; line-height: 1.5; font-weight: 700">奇點數位科技｜程式主任</h3>
+<span style="font-size: 12.5px; color: #57606a; white-space: nowrap">2019.03 – 2020.08</span>
+</div>
+<p style="margin: 0; font-size: 12.5px; line-height: 1.5; color: #32383f">主導前端由 Egret 轉 Cocos Creator，兼做後台（Django、Vue）；開發 Slot 與撲克。</p>
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-top: 4px">
+<h3 style="margin: 0; font-size: 14px; line-height: 1.5; font-weight: 700">向上國際科技｜Senior Mobile Game Programmer</h3>
+<span style="font-size: 12.5px; color: #57606a; white-space: nowrap">2013.07 – 2019.03</span>
+</div>
+<p style="margin: 0; font-size: 12.5px; line-height: 1.5; color: #32383f">以 Cocos2d-x／Cocos Creator 開發 Slot、棋牌與視訊遊戲，參與組建研發團隊。</p>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 12px">
+<h2 style="margin: 0; font-family: 'Noto Serif TC', serif; font-size: 15px; font-weight: 700; color: #7C2D12">技能</h2>
+<div style="flex: 1; height: 1px; background: #8c959f"></div>
+</div>
+<div style="display: grid; grid-template-columns: 96px minmax(0, 1fr); row-gap: 3px; column-gap: 12px; font-size: 12.5px; line-height: 1.6">
+<span style="font-weight: 700; color: #424a53">前端與引擎</span>
+<span>TypeScript、Cocos Creator 3.8（自研引擎分支）、WebGL、Spine、XState、PWA／Service Worker</span>
+<span style="font-weight: 700; color: #424a53">網路與協議</span>
+<span>WebSocket、Protobuf、MQTT、REST</span>
+<span style="font-weight: 700; color: #424a53">平台與維運</span>
+<span>Jenkins、GitLab、Docker Compose、Nginx、Prometheus／Grafana、ELK</span>
+<span style="font-weight: 700; color: #424a53">後端與資料</span>
+<span>Go、Node.js、MongoDB、MySQL、Redis</span>
+<span style="font-weight: 700; color: #424a53">AI 工具</span>
+<span>Claude Code（skills、hooks、sub-agent）、MCP（Lark、Chrome DevTools、Figma）</span>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 12px">
+<h2 style="margin: 0; font-family: 'Noto Serif TC', serif; font-size: 15px; font-weight: 700; color: #7C2D12">學歷</h2>
+<div style="flex: 1; height: 1px; background: #8c959f"></div>
+</div>
+<p style="margin: 0; font-size: 12.5px; line-height: 1.6">僑光科技大學｜資訊管理系 畢業</p>
+</section>
+
+</div>
+</body>
+</html>

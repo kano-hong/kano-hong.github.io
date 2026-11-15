@@ -7,7 +7,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "resume": "for l in zh en; do '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --no-pdf-header-footer --virtual-time-budget=15000 --print-to-pdf=public/resume/kano-hong-$l.pdf resume/$l.html; done"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.0.0",
