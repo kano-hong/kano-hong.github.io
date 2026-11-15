@@ -24,7 +24,7 @@ slug: game-frontend-diet
 
 import BeforeAfter from '~/components/BeforeAfter.astro';
 import TextureMemory from '~/components/demos/TextureMemory.astro';
-import Video from '~/components/Video.astro';
+import DownloadMix from '~/components/demos/DownloadMix.astro';
 
 <BeforeAfter
   caption="顯存與載入時間：Android 真機（Adreno 660）、同一個牌桌場景，每組 3 次、每次之間強制關閉 Chrome。下載量：staging 環境首次造訪。"
@@ -36,8 +36,6 @@ import Video from '~/components/Video.astro';
     { label: '牌桌載入時間（相對前一版 ETC1S）', before: 11134, after: 7238, text: '11,134 → 7,238 ms' },
   ]}
 />
-
-<Video caption="待錄：同一張牌桌，改前與改後並排載入（約 15 秒）" />
 
 ## 問題
 
@@ -95,6 +93,8 @@ import Video from '~/components/Video.astro';
 - 背景預載一次載入全部 8 套牌桌主題，因為玩家選了哪套要等伺服器設定回來才知道。
 
 改法：預快取只留引擎與入口（約 4.5 MB），遊戲包改成用到時才下載，而且只抓裝置用的那一種格式；檔名帶 hash、CDN 設成永久快取，所以第二次造訪直接用瀏覽器快取。牌桌主題改成登入後只載玩家選的那一套。在 staging 實測，首次造訪下載量從 65.25 MB 降到 13.96 MB。
+
+<DownloadMix />
 
 這等於推翻了原本「全部預快取、支援離線」的設計，所以我另外寫了一份 ADR 記錄原因：即時牌桌本來就需要網路，離線快取帶來的好處抵不過首訪成本。
 

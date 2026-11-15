@@ -24,6 +24,7 @@ slug: game-frontend-diet
 
 import BeforeAfter from '~/components/BeforeAfter.astro';
 import TextureMemory from '~/components/demos/TextureMemory.astro';
+import DownloadMix from '~/components/demos/DownloadMix.astro';
 
 <BeforeAfter
   caption="GPU memory and load time: a real Android phone (Adreno 660), the same table scene, 3 runs per variant with Chrome force-stopped between runs. Download size: first visit on staging."
@@ -92,6 +93,8 @@ The main site preloads the table in a background iframe. Measuring it showed tha
 - The background preload loaded all 8 table themes at once, because the player's choice isn't known until the server settings come back.
 
 The fix: precache only the engine and the entry point (about 4.5 MB). The game bundle downloads when it is needed, and only in the format the device uses. Filenames carry a hash and the CDN caches them forever, so a second visit comes straight from the browser cache. Table themes now load only the player's choice, after login. On staging, the first-visit download went from 65.25 MB to 13.96 MB.
+
+<DownloadMix lang="en" />
 
 This overturned the original "precache everything, work offline" design, so I wrote an ADR recording why: a live poker table needs the network anyway, and the offline cache wasn't worth what it cost on the first visit.
 
