@@ -3,9 +3,9 @@ import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 
-// 部署設定 — Repo: kanohong/kanohong.github.io
+// 部署設定 — Repo: kano-hong/kano-hong.github.io
 // 因為是 username.github.io 倉庫，網址掛在根目錄
-const SITE = 'https://kanohong.github.io';
+const SITE = 'https://kano-hong.github.io';
 const BASE = '/';
 
 export default defineConfig({
