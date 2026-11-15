@@ -1,0 +1,94 @@
+---
+title: GitLab 整站遷移：283 個 repo 搬家，隔天 89 款遊戲建置全綠
+summary: 公司舊的 GitLab 要停用，上面掛著 283 個遊戲與發布 repo、86 個逐遊戲的 Jenkins job 和上百個 webhook。我用一份對照表驅動整個搬遷，逐一校驗後一次切換，同時把建置流程收斂成群組 job、把寫死在腳本裡的帳密移出來。
+year: '2026'
+role: Front-end Tech Lead
+company: 新數字有限公司（XGaming）
+stack:
+  - GitLab API
+  - Git LFS
+  - Jenkins
+  - Bash / POSIX sh
+  - Python
+tags:
+  - CI/CD
+  - 遷移
+  - 平台維運
+featured: true
+order: 2
+lang: zh-TW
+slug: gitlab-migration
+---
+
+import Stats from '~/components/Stats.astro';
+import MigrationWaves from '~/components/demos/MigrationWaves.astro';
+
+<Stats
+  items={[
+    { value: '283 個', label: 'repo 逐一校驗後切換' },
+    { value: '0 失敗', label: '新站建立的 112 個 webhook' },
+    { value: '86 → 6', label: '逐遊戲 job 收斂成群組 job' },
+    { value: '89 款', label: '切換隔天建置全部通過' },
+  ]}
+/>
+
+## 問題
+
+2026 年 10 月，公司決定停用舊的 GitLab，把程式碼搬到新站。前端這邊要搬的東西不只是 git：
+
+- **283 個 repo**：遊戲原始碼、每款遊戲的發布 repo、共用程式庫，很多帶 Git LFS 大檔，最大的一個 12 GB。
+- **子模組與套件網址**：入口專案的每個分支都用子模組掛著幾十款遊戲，`package.json` 也用 git 網址裝共用套件，全都寫死舊站。
+- **建置流程**：86 個「一款遊戲一個」的 Jenkins job、上百個推送觸發建置的 webhook，以及寫死舊站網址和帳密的建置腳本。
+
+而且搬的同時，op3 到 op6 這幾個產品還在開發，不能停工。
+
+## 我的角色
+
+新站由運維架設；前端這一側從盤點、依產品線規劃新群組、寫遷移腳本，到切換當天的操作與事後驗證都由我負責。後端團隊自己搬後端的 repo。遷移腳本是我搭配 Claude Code 寫的。
+
+## 決策 1：一份對照表驅動全部
+
+我先把舊站四個群組盤點成一份 `mapping.csv`，共 311 列：舊路徑、新路徑、波次、要搬還是不搬。28 個早已封存或舊架構的 repo 標成不搬，留在舊站。
+
+這份表是唯一需要人審的東西。新路徑依產品線重新分組，有疑問的就問，不靠猜；之後產生 Lark 搬遷日誌、改寫子模組網址、建 webhook、改 Jenkins，全部從這份表讀。
+
+## 決策 2：只搬分支和 tag，SHA 一個都不變
+
+每個 repo 的做法是 `git clone --mirror` 加上 `git lfs fetch --all`，用 API 在新路徑建專案，再只推 `refs/heads/*` 和 `refs/tags/*`。
+
+- **不用 `push --mirror`**：mirror 會帶著 `refs/merge-requests/*` 這類隱藏 ref，新站會拒收。
+- **先推 LFS 再推 ref**：新站的 pre-receive hook 會擋下 LFS 物件還沒到的推送。
+- **SHA 不變**：這樣所有子模組指標都還有效，入口專案只要改網址、不用改指標。
+
+試跑時也踩到幾個新站的限制：HTTPS 超過約 50 MB 會回 413，所以 ref 改走 SSH；超過 1 GB 的第一次推送會因為 LFS 完整性掃描逾時失敗，沒有 LFS 檔的大 repo 就在推送期間暫時關掉 LFS；新站 SSH 偶爾換一把主機金鑰，腳本重試、整批再跑一次補齊。
+
+## 決策 3：分波複製，一次切換
+
+複製和切換是兩件事。複製期間舊站一直是唯一的來源，開發者照常推，對誰都沒有影響；只有切換那天要凍結。
+
+順序依「多少人正在改」排：先試跑 1 個，再搬沒人在改的 250 個，接著是測試中的產品，最後才是還在開發的 op3。
+
+<MigrationWaves />
+
+入口專案的建置會用 `git submodule update --remote` 依 `.gitmodules` 的網址抓最新版。如果某款遊戲先切到新站、入口還指著舊站，建置會默默拿到舊程式碼。所以子模組這一整串要同一天切。
+
+校驗也要對準真正的來源：一開始我拿本機的 mirror 比對，有一次 mirror 只抓了一半，和空的目標比起來「一樣」。之後一律和舊站的 ref 比對。
+
+## 決策 4：建置流程趁這次收斂
+
+- **86 個逐遊戲 job 改成 6 個群組 job**：依產品線各一個，遊戲代碼當參數。
+- **webhook 轉發重寫**：改成 POSIX sh，依 repo 網址判斷產品線（新站每個群組都叫 `cocos`，看名稱分不出來），只建置 `dev` 和 `staging` 的推送；12 個情境先 dry run 驗過。
+- **帳密移出腳本**：GitLab token、webhook secret、Jenkins 密碼原本寫在建置腳本裡，還會印進建置 log。改成從環境變數讀，沒設就直接結束。
+- **webhook 驗證**：新站沒有測試 webhook 的 API，我用一個假的推送打轉發器確認：錯的 secret 回 401、對的回 200，而且因為分支不符，不會真的觸發建置。
+
+## 結果
+
+- **2026-10-10 切換完成**：凍結後 283 個 repo 新舊比對完全一致，112 個 webhook 建立 0 失敗。
+- **隔天把每款遊戲都觸發建置一次**：其中一條產品線有 33 款建不起來，原因是那個分支的 lock 檔少了 42 個 workspace 連結，遷移前就是這樣。補上後重跑，最後留在群組 job 裡的三條產品線 89 款全部通過；另外 4 款本來就建不起來（程式碼或發布 repo 不存在），從 job 的選項裡拿掉。
+- **舊站改成唯讀**，之後的開發全部在新站。
+
+## 學到的事
+
+- **改網址要掃整棵樹。** 第一次只改了根目錄的 `package.json`，結果有個 npm workspace 裡的 `package.json` 還指著舊站，建置在 `npm ci` 失敗。之後改寫一律掃每一層的 `package.json`、lock 檔和 `.gitmodules`。
+- **驗證要對準真正的來源。** 和自己手上的副本比，副本壞了也會說「一樣」。
+- **能分開的步驟就分開。** 複製可以重來，切換不行；把可以重來的部分做完、驗完，切換那天要做的事就很少。

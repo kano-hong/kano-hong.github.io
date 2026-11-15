@@ -1,0 +1,182 @@
+---
+// 互動 demo：283 個 repo 依波次搬到新站的過程。每格是一個 repo：
+// 灰＝還在舊站、淺色＝已複製、主色＝已校驗、深色＝已切換。數字照實際遷移紀錄。
+const WAVES = [
+  { n: 1, label: '試跑：先搬 1 個小 repo，確認 LFS 與子模組指標都對' },
+  { n: 250, label: '第一波：250 個沒人在改的 repo（約 1 成因新站 SSH 偶發換金鑰失敗，重跑補齊）' },
+  { n: 3, label: 'PG 前端 3 個（最大的 12 GB）' },
+  { n: 22, label: '第二波 A：測試中的產品與子遊戲 22 個' },
+  { n: 4, label: '第二波 B：所有分支共用的 entry、base、建置腳本 4 個' },
+  { n: 3, label: '最後：還在開發的 op3 系列 3 個' },
+];
+---
+
+<figure class="waves" data-waves={JSON.stringify(WAVES)}>
+  <div class="bar">
+    <button type="button" data-play>▶ 播放</button>
+    <button type="button" data-reset>重設</button>
+    <span class="step" data-step aria-live="polite">按播放，看 283 個 repo 怎麼搬。</span>
+  </div>
+  <div class="grid" data-grid></div>
+  <dl class="count">
+    <div><dt>已複製</dt><dd data-c="copied">0</dd></div>
+    <div><dt>已校驗</dt><dd data-c="verified">0</dd></div>
+    <div><dt>已切換</dt><dd data-c="cut">0</dd></div>
+  </dl>
+  <figcaption>
+    複製期間舊站一直是唯一的來源，開發者照常推。到了切換那天才凍結、逐一比對新舊兩邊，一次切過去。
+  </figcaption>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-waves]').forEach((root) => {
+    const waves: { n: number; label: string }[] = JSON.parse(root.dataset.waves!);
+    const total = waves.reduce((s, w) => s + w.n, 0);
+    const grid = root.querySelector<HTMLElement>('[data-grid]')!;
+    const step = root.querySelector<HTMLElement>('[data-step]')!;
+    const play = root.querySelector<HTMLButtonElement>('[data-play]')!;
+    const cells = Array.from({ length: total }, () => grid.appendChild(document.createElement('i')));
+    const count = (k: string, v: number) => (root.querySelector(`[data-c="${k}"]`)!.textContent = String(v));
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let timer = 0, run = 0;
+    // 減少動態效果時省略逐格動畫，但每一波仍停留，讓說明讀得到
+    const sleep = (ms: number) => new Promise((r) => (timer = window.setTimeout(r, still ? 0 : ms)));
+    const pause = (ms: number) => new Promise((r) => (timer = window.setTimeout(r, still ? 1800 : ms)));
+
+    function reset() {
+      run++; clearTimeout(timer);
+      cells.forEach((c) => (c.className = ''));
+      ['copied', 'verified', 'cut'].forEach((k) => count(k, 0));
+      step.textContent = '按播放，看 283 個 repo 怎麼搬。';
+      play.disabled = false;
+    }
+
+    async function start() {
+      reset();
+      const me = run; play.disabled = true;
+      let i = 0, copied = 0;
+      for (const w of waves) {
+        step.textContent = w.label;
+        const batch = cells.slice(i, i + w.n);
+        const per = Math.max(4, 1200 / w.n);
+        for (const [k, c] of batch.entries()) {
+          if (me !== run) return;
+          // 第一波約 1 成先失敗，之後重跑成功
+          c.className = w.n > 100 && k % 10 === 3 ? 'fail' : 'copied';
+          copied++; count('copied', copied);
+          if (k % 5 === 4) await sleep(per * 5);
+        }
+        for (const c of batch) if (c.className === 'fail') c.className = 'copied';
+        await sleep(500);
+        if (me !== run) return;
+        batch.forEach((c) => (c.className = 'verified'));
+        count('verified', i + w.n);
+        i += w.n;
+        await pause(700);
+      }
+      step.textContent = '切換日：凍結推送 → 283 個與舊站逐一比對完全一致 → 改寫子模組與套件網址 → 切換';
+      await pause(1200);
+      if (me !== run) return;
+      cells.forEach((c) => (c.className = 'cut'));
+      count('cut', total);
+      step.textContent = '切換完成：112 個 webhook 0 失敗，隔天三條產品線 89 款遊戲建置全部通過。';
+      play.disabled = false;
+    }
+
+    play.addEventListener('click', start);
+    root.querySelector('[data-reset]')!.addEventListener('click', reset);
+  });
+</script>
+
+<style>
+  .waves {
+    margin: 2rem 0;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--paper-tint);
+  }
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .bar button {
+    font: inherit;
+    font-size: var(--step--1);
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--ink-soft);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .bar button:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .bar button:disabled {
+    color: var(--ink-faint);
+    border-color: var(--rule);
+    cursor: default;
+  }
+  .step {
+    flex: 1 1 16rem;
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12px, 1fr));
+    gap: 3px;
+  }
+  .grid :global(i) {
+    aspect-ratio: 1;
+    border-radius: 2px;
+    background: var(--rule);
+    transition: background var(--duration-fast) var(--ease-out);
+  }
+  .grid :global(i.copied) {
+    background: var(--accent-tint);
+  }
+  .grid :global(i.fail) {
+    background: var(--ink);
+  }
+  .grid :global(i.verified) {
+    background: var(--accent);
+  }
+  .grid :global(i.cut) {
+    background: var(--accent-deep);
+  }
+  .count {
+    display: flex;
+    gap: 1.5rem;
+    margin: 1rem 0 0;
+    font-size: var(--step--1);
+  }
+  .count div {
+    display: flex;
+    gap: 0.4rem;
+    align-items: baseline;
+  }
+  .count dt {
+    color: var(--ink-faint);
+  }
+  .count dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    color: var(--ink);
+  }
+  figcaption {
+    margin-top: 1rem;
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .grid :global(i) {
+      transition: none;
+    }
+  }
+</style>
