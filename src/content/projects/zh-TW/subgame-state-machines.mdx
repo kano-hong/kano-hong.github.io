@@ -35,7 +35,11 @@ import Video from '~/components/Video.astro';
   ]}
 />
 
-<Video caption="待錄：左邊是遊戲，右邊是 Stately 即時狀態圖；大廳 → 進入輪盤 → 斷線重連 → 回大廳（約 30 秒）" />
+<Video
+  src="/videos/xstate-reconnect.mp4"
+  poster="/videos/xstate-reconnect.jpg"
+  caption="UAT 實錄：左邊是遊戲，右邊是 Stately 即時顯示的狀態機。大廳 → 進入輪盤 → 斷線（主動關掉 WebSocket）→ 自動重連 → 離開回大廳。"
+/>
 
 ## 問題
 
@@ -114,7 +118,11 @@ WebSocket 層監聽註冊表（MobX `reaction`），一有新遊戲登記就幫�
 - **同事照框架獨立做出 3 款子遊戲**，平台本身不用改。
 - **132 個單元測試**涵蓋各台狀態機與子遊戲；k6 整合測試打通了百人德州從登入到下注的完整流程。
 
-<Video caption="待錄：k6 壓測機器人跑同一套狀態機（終端機畫面，約 20 秒）" />
+<Video
+  src="/videos/k6-roulette-bot.mp4"
+  poster="/videos/k6-roulette-bot.jpg"
+  caption="UAT 實錄：k6 用 1 個機器人跑輪盤子遊戲，走的是遊戲本身的狀態機：登入 → 進桌 → 下注 → 派彩 → 離桌，7 項檢查全部通過。畫面略去每秒的下注熱度推播，長訊息截斷，空檔壓到 1.2 秒。"
+/>
 
 ## 學到的事
 

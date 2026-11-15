@@ -38,12 +38,15 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   .placeholder {
     display: block;
     width: 100%;
-    aspect-ratio: 16 / 9;
     border: 1px solid var(--rule);
     border-radius: 4px;
     background: var(--paper-tint);
   }
+  video {
+    height: auto;
+  }
   .placeholder {
+    aspect-ratio: 16 / 9;
     display: grid;
     place-items: center;
     border-style: dashed;
