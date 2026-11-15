@@ -25,7 +25,7 @@ export const ui = {
     'hero.title.tags': '11 年｜H5 效能與架構｜帶過 10 人團隊',
     'hero.motto': '為遊戲寫一行行結構與秩序。',
     'hero.subtitle':
-      '2020 年起擔任遊戲客戶端 Lead。專注於 Cocos Creator、TypeScript、狀態機架構，以及把混亂的開發流程改造成可重複的系統。',
+      '2020～2026 年擔任遊戲客戶端 Lead。專注於 Cocos Creator、TypeScript、狀態機架構，以及把混亂的開發流程改造成可重複的系統。',
     'hero.cta.work': '看作品',
     'hero.cta.writing': '看文章',
 
@@ -40,7 +40,7 @@ export const ui = {
     'home.about.eyebrow': '關於',
     'home.about.title': '一個把 10 秒以上手動流程都寫成腳本的人',
     'home.about.body':
-      '我是 Kano（洪嘉濃）。過去十一年我在四家公司做遊戲，從拉霸、德州撲克、麻將、輪盤到捕魚機，全都動手寫過。現在是新數字有限公司（XGaming）的 Game Client Tech Lead。',
+      '我是 Kano（洪嘉濃）。過去十一年我在四家公司做遊戲，從拉霸、德州撲克、麻將、輪盤到捕魚機，全都動手寫過。最近一份工作是新數字有限公司（XGaming）的 Game Client Tech Lead（2024.02 – 2026.11）。',
     'home.about.more': '更多關於我 →',
 
     'project.challenges': '面對的挑戰',
@@ -75,7 +75,7 @@ export const ui = {
     'hero.title.tags': 'Cocos Creator · 11 yrs · H5 performance & architecture',
     'hero.motto': 'I bring structure and order to game code.',
     'hero.subtitle':
-      'Leading game client teams since 2020. Focused on Cocos Creator, TypeScript, state-machine architecture, and turning messy development pipelines into repeatable systems.',
+      'Led game client teams from 2020 to 2026. Focused on Cocos Creator, TypeScript, state-machine architecture, and turning messy development pipelines into repeatable systems.',
     'hero.cta.work': 'See work',
     'hero.cta.writing': 'Read writing',
 
@@ -90,7 +90,7 @@ export const ui = {
     'home.about.eyebrow': 'About',
     'home.about.title': 'Anything manual over ten seconds becomes a script',
     'home.about.body':
-      'I’m Kano Hong. Eleven years of shipping games across four companies — slot, Texas Hold’em, mahjong, roulette, fishing. Currently Game Client Tech Lead at Newdigit Co., Ltd. (XGaming).',
+      'I’m Kano Hong. Eleven years of shipping games across four companies — slot, Texas Hold’em, mahjong, roulette, fishing. Most recently Game Client Tech Lead at Newdigit Co., Ltd. (XGaming), 2024.02 – 2026.11.',
     'home.about.more': 'More about me →',
 
     'project.challenges': 'Challenges',

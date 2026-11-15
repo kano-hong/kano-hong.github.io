@@ -128,9 +128,6 @@ const localTime = now.toLocaleString(lang === 'zh-TW' ? 'zh-TW' : 'en-US', {
     overflow-wrap: anywhere;
   }
 
-  @media (max-width: 540px) {
-    .hero-role { font-size: var(--step-4); }
-  }
 
   .hero-tags {
     display: block;
@@ -256,5 +253,17 @@ const localTime = now.toLocaleString(lang === 'zh-TW' ? 'zh-TW' : 'en-US', {
     .num {
       font-size: 2.5rem;
     }
+  }
+
+  /* 手機：收緊間距、藏掉 TIME／YRS，讓履歷按鈕留在第一屏 */
+  @media (max-width: 540px) {
+    .hero { padding-block: 2.5rem 3rem; }
+    .hero-inner { gap: 1.25rem; }
+    .hero-role { font-size: var(--step-4); }
+    .hero-subtitle { margin-bottom: 0.5rem; }
+    .hero-cta { margin-bottom: 0; }
+    .hero-aside { display: none; }
+    .hero-numerals { display: none; }
+    .hero-subtitle { font-size: var(--step-0); line-height: 1.6; }
   }
 </style>

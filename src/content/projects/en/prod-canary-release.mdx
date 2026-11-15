@@ -1,12 +1,12 @@
 ---
 title: 'Real-money releases in production: an 8-server canary and zero 5xx after each release'
-summary: A slot platform's Node.js game servers, 8 of them in production, handling real players' bets. I turned releases into a repeatable canary process and fixed the bug that made all 8 crash together whenever the database dropped.
+summary: A slot platform's Node.js game servers, 8 of them in production, handling real players' bets. I turned releases into a repeatable canary process (5 releases, 0 5xx after each) and fixed the bug that made all 8 crash together whenever the database dropped.
 year: '2026'
 role: Game Client Tech Lead (also running production ops)
 company: Newdigit Co., Ltd. (XGaming)
 impact:
   role: 'I owned production releases and monitoring, and found and fixed the root cause of the crashes. The back-end lead maintains the server code.'
-  team: '2 people: I handled releases, monitoring and the crash fix; the back-end lead maintains the server code and approved the releases'
+  team: '2 people: I handled releases, monitoring and the crash fix; the back-end lead maintained the server code and approved the releases'
   timeline: 'October 24 – November 9, 2026: 5 releases; the crash fix went live on October 31'
   results:
     - '5 canary releases, with 0 Nginx 5xx after each'

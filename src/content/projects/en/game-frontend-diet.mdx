@@ -1,6 +1,6 @@
 ---
 title: 'Slimming a game front end: GPU memory −92%, first visit 65 → 14 MB'
-summary: A real-time Texas Hold’em game running in mobile browsers. Players overseas said the first load was slow, and iPhones lost their WebGL context after a while. I started by measuring, then took on textures, fonts, protocol code and precaching one at a time.
+summary: A real-time Texas Hold’em game running in mobile browsers. Players overseas said the first load was slow, and iPhones lost their WebGL context after a while. I started by measuring, then took on textures, fonts, protocol code and precaching one at a time. The blank wait on a first visit fell from 2,101 ms to 46 ms.
 year: '2026'
 role: Game Client Tech Lead
 company: Newdigit Co., Ltd. (XGaming)
@@ -98,6 +98,7 @@ I also measured long sessions on real devices: the table holds 60 fps, with no t
 Besides downloading, the first load spends time parsing JavaScript and fonts.
 
 - **Font subsetting**: the original Noto font had 30,894 glyphs, 6,582 of them in CJK Extension A, which the project never used. I kept GB2312 level 1, common Big5 and JIS X 0208 level 1, plus every character actually used in 23 locale files and in all prefabs and scenes: 8,955 glyphs. The file went from 10.07 MB to 2.63 MB and the transfer from 6.0 MB to 1.6 MB, and not a single existing string lost a character; anything outside the subset falls back to the system font one character at a time.
+- **Startup critical path**: the 1 MB texture-decoder wasm used to hold the critical path alone for 1,153 ms; it is now preloaded alongside the engine download, and the service worker registers only after the loading screen appears. On a first visit, the blank gap between the engine finishing its download and the next request went from 2,101 ms to 46 ms.
 - **Protocol code**: 318 Protobuf messages were generated with protobufjs's static-module target, which writes dedicated encode and decode code for every message. That was 7.9 MB of source, most of the game bundle, all of it parsed at startup whether it was used or not. I switched to emitting only the schema description (json-module) and letting protobufjs build the same codecs at runtime: the generated code dropped to 232 KB and module initialization got 2.1× faster. I compared all 371 exported symbols with the old build one by one, and the encoded bytes and JSON output are identical.
 
 ## Decision 4: don't download what a first visit won't use
