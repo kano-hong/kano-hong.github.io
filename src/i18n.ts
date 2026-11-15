@@ -39,7 +39,7 @@ export const ui = {
     'home.about.eyebrow': '關於',
     'home.about.title': '一個把 10 秒以上手動流程都寫成腳本的人',
     'home.about.body':
-      '我是 Kano（洪嘉濃），在台灣彰化二林。過去十一年我在四家公司做遊戲，從拉霸、德州撲克、麻將、輪盤到捕魚機，全都動手寫過。現在在新數字有限公司擔任前端開發 Lead 兼 Cocos 主要負責人。',
+      '我是 Kano（洪嘉濃），住在新北板橋。過去十一年我在四家公司做遊戲，從拉霸、德州撲克、麻將、輪盤到捕魚機，全都動手寫過。現在是新數字有限公司（XGaming）的 Front-end Tech Lead。',
     'home.about.more': '更多關於我 →',
 
     'project.challenges': '面對的挑戰',
@@ -88,7 +88,7 @@ export const ui = {
     'home.about.eyebrow': 'About',
     'home.about.title': 'Anything manual over ten seconds becomes a script',
     'home.about.body':
-      "I'm Kano Hong, based in Erlin, Changhua, Taiwan. Eleven years of shipping games across four companies — slot, Texas Hold'em, mahjong, roulette, fishing. Currently Front-end Lead and Cocos primary at Newdigit Co., Ltd.",
+      "I'm Kano Hong, based in Banqiao, New Taipei, Taiwan. Eleven years of shipping games across four companies — slot, Texas Hold'em, mahjong, roulette, fishing. Currently Front-end Tech Lead at Newdigit Co., Ltd. (XGaming).",
     'home.about.more': 'More about me →',
 
     'project.challenges': 'Challenges',
