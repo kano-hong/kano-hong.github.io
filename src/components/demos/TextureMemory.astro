@@ -1,0 +1,180 @@
+---
+// 互動 demo：同一批貼圖在不同 GPU 格式下佔多少顯存。依區塊大小逐層精算（含 mipmap）。
+---
+
+<figure class="texmem" data-texmem>
+  <div class="controls">
+    <label>
+      尺寸
+      <select data-size>
+        <option value="512">512 × 512</option>
+        <option value="1024">1024 × 1024</option>
+        <option value="2048" selected>2048 × 2048</option>
+        <option value="4096">4096 × 4096</option>
+      </select>
+    </label>
+    <label>
+      張數 <output data-count-out>24</output>
+      <input type="range" min="1" max="120" value="24" data-count />
+    </label>
+    <label class="check">
+      <input type="checkbox" data-mip /> mipmap
+    </label>
+  </div>
+
+  <ul class="rows">
+    <li data-fmt="1,4">
+      <span class="name">WebP／PNG<small>上 GPU 前解成 RGBA8，每像素 4 bytes</small></span>
+      <span class="track"><span class="bar"></span></span>
+      <span class="mb"></span>
+    </li>
+    <li data-fmt="4,16">
+      <span class="name">ETC1S<small>轉成 ETC2 RGBA，每像素 1 byte</small></span>
+      <span class="track"><span class="bar"></span></span>
+      <span class="mb"></span>
+    </li>
+    <li data-fmt="4,16">
+      <span class="name">UASTC<small>轉成 ASTC 4×4，每像素 1 byte</small></span>
+      <span class="track"><span class="bar"></span></span>
+      <span class="mb"></span>
+    </li>
+    <li data-fmt="8,16" class="pick">
+      <span class="name">XUASTC 8×8<small>轉成 ASTC 8×8，每像素 0.25 byte</small></span>
+      <span class="track"><span class="bar"></span></span>
+      <span class="mb"></span>
+    </li>
+  </ul>
+  <figcaption>
+    下載的檔案大小和顯存是兩回事：WebP 檔案最小，放到 GPU 上卻最大。拉拉看張數，就知道手機為什麼撐不住。
+  </figcaption>
+</figure>
+
+<script>
+  // 每一層 mip：ceil(寬/區塊) × ceil(高/區塊) × 每區塊 bytes
+  function bytes(size: number, block: number, blockBytes: number, mip: boolean) {
+    let total = 0;
+    for (let s = size; ; s = Math.max(1, s >> 1)) {
+      total += Math.ceil(s / block) ** 2 * blockBytes;
+      if (!mip || s === 1) break;
+    }
+    return total;
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-texmem]').forEach((root) => {
+    const size = root.querySelector<HTMLSelectElement>('[data-size]')!;
+    const count = root.querySelector<HTMLInputElement>('[data-count]')!;
+    const countOut = root.querySelector<HTMLOutputElement>('[data-count-out]')!;
+    const mip = root.querySelector<HTMLInputElement>('[data-mip]')!;
+    const rows = [...root.querySelectorAll<HTMLElement>('[data-fmt]')];
+
+    function update() {
+      countOut.value = count.value;
+      const values = rows.map((li) => {
+        const [block, blockBytes] = li.dataset.fmt!.split(',').map(Number);
+        return bytes(+size.value, block, blockBytes, mip.checked) * +count.value;
+      });
+      const max = Math.max(...values);
+      rows.forEach((li, i) => {
+        li.querySelector<HTMLElement>('.bar')!.style.width = `${(values[i] / max) * 100}%`;
+        li.querySelector<HTMLElement>('.mb')!.textContent = `${(values[i] / 2 ** 20).toFixed(1)} MB`;
+      });
+    }
+
+    [size, count, mip].forEach((el) => el.addEventListener('input', update));
+    update();
+  });
+</script>
+
+<style>
+  .texmem {
+    margin: 2rem 0;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--paper-tint);
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    align-items: end;
+    margin-bottom: 1.25rem;
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+  .controls label {
+    display: grid;
+    gap: 0.3rem;
+  }
+  .controls .check {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+  select,
+  output {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+  }
+  input[type='range'] {
+    width: 12rem;
+    accent-color: var(--accent);
+  }
+  /* 加上 .texmem 前綴，蓋過文章 .prose ul/li 的縮排與間距 */
+  .texmem .rows {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.9rem;
+  }
+  .texmem .rows li {
+    margin: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.3rem 1rem;
+  }
+  .name {
+    grid-column: 1 / -1;
+    font-size: var(--step--1);
+    color: var(--ink);
+  }
+  .name small {
+    margin-left: 0.6rem;
+    color: var(--ink-faint);
+  }
+  .track {
+    display: block;
+    height: 10px;
+    align-self: center;
+    border-radius: 2px;
+    background: var(--rule-soft);
+  }
+  .bar {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--ink-faint);
+    transition: width var(--duration-base) var(--ease-out);
+  }
+  .pick .bar {
+    background: var(--accent);
+  }
+  .mb {
+    min-width: 6.5em;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+  figcaption {
+    margin-top: 1rem;
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bar {
+      transition: none;
+    }
+  }
+</style>

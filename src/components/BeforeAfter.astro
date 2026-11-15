@@ -1,0 +1,89 @@
+---
+// 改前改後對比：每列各自以「改前」為 100% 畫長條，單位不同也能放在一起。
+interface Row {
+  label: string;
+  before: number;
+  after: number;
+  text: string; // 顯示用，例如 "7.9 MB → 232 KB"
+}
+interface Props {
+  rows: Row[];
+  caption?: string;
+}
+const { rows, caption } = Astro.props;
+const pct = (r: Row) => Math.round((1 - r.after / r.before) * 100);
+---
+
+<figure class="ba">
+  <dl>
+    {rows.map((r) => (
+      <div class="row">
+        <dt>{r.label}</dt>
+        <dd>
+          <span class="track">
+            <span class="bar" style={`width:${Math.max((r.after / r.before) * 100, 0.6)}%`} />
+          </span>
+          <span class="nums">
+            {r.text} <strong>−{pct(r)}%</strong>
+          </span>
+        </dd>
+      </div>
+    ))}
+  </dl>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .ba {
+    margin: 2rem 0;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--paper-tint);
+  }
+  dl {
+    margin: 0;
+    display: grid;
+    gap: 0.9rem;
+  }
+  .row {
+    display: grid;
+    gap: 0.3rem;
+  }
+  dt {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+  dd {
+    margin: 0;
+    display: grid;
+    gap: 0.25rem;
+  }
+  .track {
+    display: block;
+    height: 10px;
+    border-radius: 2px;
+    background: var(--rule-soft);
+  }
+  .bar {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+  .nums {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+  .nums strong {
+    color: var(--accent);
+    font-weight: 500;
+    margin-left: 0.4rem;
+  }
+  figcaption {
+    margin-top: 1rem;
+    font-size: var(--step--2);
+    color: var(--ink-faint);
+  }
+</style>
