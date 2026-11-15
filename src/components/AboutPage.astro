@@ -12,8 +12,8 @@ const eyebrow = lang === 'zh-TW' ? '個人介紹' : 'Bio';
 
 const intro =
   lang === 'zh-TW'
-    ? '我是 Kano Hong（洪嘉濃），住在新北板橋。前端工程師，遊戲產業十一年。'
-    : "I'm Kano Hong, based in Banqiao, New Taipei, Taiwan. Frontend engineer, eleven years in the game industry.";
+    ? '我是 Kano Hong（洪嘉濃），住在新北板橋。Front-end Tech Lead，遊戲產業十一年。'
+    : "I'm Kano Hong, based in Banqiao, New Taipei, Taiwan. Front-end Tech Lead, eleven years in the game industry.";
 
 const story = lang === 'zh-TW'
   ? [
@@ -44,10 +44,25 @@ const facts = lang === 'zh-TW'
     ];
 
 const stack = [
-  'Cocos Creator', 'Cocos2d-x', 'TypeScript', 'XState', 'MobX-Keystone',
-  'MVVM', 'Vue.js (Vben)', '.NET 5+', 'Django', 'Docker', 'Nginx', 'Jenkins',
-  'Claude Code', 'GitHub Copilot',
+  'Cocos Creator 3.x', 'TypeScript', 'xstate 5', 'MobX', 'Protobuf / WebSocket',
+  'WebGL · Basis Universal / ASTC', 'PWA · Workbox', 'Vitest', 'k6',
+  'Node.js', 'Docker Compose', 'Nginx', 'Jenkins', 'GitLab API',
+  'Prometheus / Grafana', 'ELK', 'Python', 'Claude Code · MCP',
 ];
+
+const timeline = lang === 'zh-TW'
+  ? [
+      { when: '2024.02 – 至今', where: '新數字有限公司（XGaming）', role: 'Front-end Tech Lead', what: '帶約 10 人的 Cocos 團隊，負責德州撲克的 Web／PWA、原生 App、Telegram Mini App 與子遊戲平台；2026 年起兼管 CI/CD 與正式環境維運。' },
+      { when: '2020.08 – 2024.02', where: '樂榮科技', role: 'FrontEnd Develop Lead', what: '主導前端由 PixiJS 轉 Cocos Creator、建立 CI/CD；開發德州撲克與小遊戲。' },
+      { when: '2019.03 – 2020.08', where: '奇點數位科技', role: '程式主任', what: '主導前端由 Egret 轉 Cocos Creator，兼做後台（Django、Vue）；開發 Slot 與撲克。' },
+      { when: '2013.07 – 2019.03', where: '向上國際科技', role: 'Senior Mobile Game Programmer', what: '以 Cocos2d-x／Cocos Creator 開發 Slot、棋牌與視訊遊戲，參與組建研發團隊。' },
+    ]
+  : [
+      { when: '2024.02 – now', where: 'Newdigit Co., Ltd. (XGaming)', role: 'Front-end Tech Lead', what: 'Lead a ~10-engineer Cocos team across Texas Hold’em (web/PWA, native apps, Telegram Mini App) and a sub-game platform; since 2026 I also own CI/CD and production operations.' },
+      { when: '2020.08 – 2024.02', where: '樂榮科技', role: 'FrontEnd Develop Lead', what: 'Led the front-end move from PixiJS to Cocos Creator and set up CI/CD; built Texas Hold’em and casual games.' },
+      { when: '2019.03 – 2020.08', where: '奇點數位科技', role: 'Lead Programmer', what: 'Led the front-end move from Egret to Cocos Creator and built back-office tools (Django, Vue); shipped slot and poker games.' },
+      { when: '2013.07 – 2019.03', where: '向上國際科技', role: 'Senior Mobile Game Programmer', what: 'Built slot, card and live-dealer games with Cocos2d-x and Cocos Creator, and helped build up the R&D team.' },
+    ];
 
 const genresShipped = lang === 'zh-TW'
   ? ['拉霸 Slot', '德州撲克 Texas Hold\'em', '麻將 Mahjong', '輪盤 Roulette', '捕魚機 Fishing']
@@ -66,6 +81,21 @@ const genresShipped = lang === 'zh-TW'
   <div class="wrap-narrow">
     <div class="prose-block">
       {story.map((p) => <p>{p}</p>)}
+    </div>
+
+    <hr />
+
+    <div class="timeline">
+      <h2 class="block-heading">{lang === 'zh-TW' ? '經歷' : 'Experience'}</h2>
+      <ol>
+        {timeline.map((j) => (
+          <li>
+            <p class="tl-when">{j.when}</p>
+            <p class="tl-head"><strong>{j.where}</strong> · {j.role}</p>
+            <p class="tl-what">{j.what}</p>
+          </li>
+        ))}
+      </ol>
     </div>
 
     <hr />
@@ -94,7 +124,7 @@ const genresShipped = lang === 'zh-TW'
     <hr />
 
     <div class="stack-block">
-      <h2 class="block-heading">{lang === 'zh-TW' ? '日常工具' : 'Daily tools'}</h2>
+      <h2 class="block-heading">{lang === 'zh-TW' ? '常用技術' : 'Tech I use'}</h2>
       <ul class="stack-list">
         {stack.map((s) => <li>{s}</li>)}
       </ul>
@@ -213,6 +243,35 @@ const genresShipped = lang === 'zh-TW'
     border-color: var(--accent-tint);
     background: var(--accent-tint);
     color: var(--accent-deep);
+  }
+
+  .timeline ol {
+    list-style: none;
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .timeline li {
+    padding-left: 1rem;
+    border-left: 2px solid var(--rule);
+  }
+
+  .tl-when {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .tl-head {
+    margin-top: 0.25rem;
+    color: var(--ink);
+  }
+
+  .tl-what {
+    margin-top: 0.25rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    max-width: 56ch;
   }
 
   .contact-list {

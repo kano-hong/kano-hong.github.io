@@ -1,0 +1,107 @@
+---
+title: 資料庫斷一下，8 台遊戲伺服器一起結束：new Promise(async) 和一個數學函式庫
+summary: 正式環境的 8 個 Node.js 遊戲伺服器，在資料庫斷線後 40 毫秒內一起結束。原因是兩件事疊在一起：16 處 new Promise(async …) 讓錯誤變成沒人接的 rejection，而一個 emscripten 編出來的函式庫把它變成行程結束。這篇記錄怎麼排查、怎麼修、怎麼在本機重現。
+date: 2026-11-15
+tags:
+  - Node.js
+  - MongoDB
+  - 錯誤處理
+  - 正式環境
+series: 正式環境筆記
+readTime: 7
+lang: zh-TW
+slug: unhandled-rejection-crash
+---
+
+這篇是〈[真錢遊戲的 Prod 換版](/work/prod-canary-release/)〉的技術補充：案例那篇講換版流程，這篇講崩潰的根因在程式碼的哪裡。
+
+## 現象：40 毫秒內，8 台一起結束
+
+這是一個 Slot 平台的遊戲伺服器，Node.js 18，8 個容器跑在同一台正式機上，共用一個 MongoDB。
+
+2026-10-30 凌晨，8 個容器在 8 毫秒內和資料庫斷線，接著一起結束；Docker 自動把它們拉起來，約 11 秒後恢復服務。更早的 10-24 也有一次資料庫斷線，那次是反覆重啟了將近一小時。
+
+## 先排除主機
+
+當天剛改過 Docker 設定，第一個懷疑自然是它。我先查主機：
+
+- dockerd、containerd 從開機到現在重啟 0 次。
+- 只有 8 個遊戲伺服器重啟了 1 次，同一台機器上的其他 9 個容器都是 0。
+- 系統日誌照毫秒排：資料庫斷線（.462～.470）→ 行程結束（.485～.505）→ Docker 拆掉網路 → 重新啟動。網路的變化在行程結束**之後**，是結果不是原因。
+
+有個小坑：主機的時區是 UTC+8，我第一次用 UTC 查日誌，看到的是錯的時段。
+
+8 台在幾十毫秒內一起結束，不太可能是 8 個各自獨立的 bug，比較可能是它們共同依賴的東西先出事，再由同一段程式碼把行程帶走。
+
+## 第一層：錯誤被 new Promise(async) 吞掉
+
+資料庫的存取都寫在同一個工具檔裡，有 16 處長這樣（名稱已改）：
+
+```js
+const rows = await new Promise(async (resolve, reject) => {
+  const col = client.db(dbName).collection('history');
+  resolve(await col.find({ pid, uid }).sort({ tid: 1 }).toArray());
+});
+```
+
+問題在 executor 是 `async` 函式。`find()` 失敗時，丟出的錯誤會讓 **executor 自己回傳的那個 promise** 變成 rejected，但 `new Promise` 不看 executor 的回傳值，所以：
+
+- 外層的 promise 永遠不會 resolve，也不會 reject，呼叫端的 `try/catch` 什麼都接不到。
+- executor 回傳的那個 rejected promise 沒有任何人接，變成一個 unhandled rejection。
+
+ESLint 內建的 `no-async-promise-executor` 規則抓的就是這種寫法。
+
+## 第二層：一個函式庫把 rejection 變成行程結束
+
+Node 18 預設遇到 unhandled rejection 本來就會結束行程。但這裡還多了一層：遊戲邏輯用到 glpk.js，一個用 emscripten 編出來的線性規劃函式庫。它在 Node 環境下會註冊兩個處理器：
+
+```js
+process.on('uncaughtException', (e) => { if (!(e instanceof ExitStatus)) throw e; });
+process.on('unhandledRejection', (e) => { throw e; });
+```
+
+一個 rejection 進來，它就丟出例外；這個例外變成 uncaught exception，它的處理器又再丟一次，行程以 exit code 7 結束。而且這段註冊在每次呼叫 `GLPK()` 時都會跑，這個專案在模組載入時就呼叫，所以伺服器一啟動就生效。
+
+這也解釋了為什麼「加一個全域的錯誤處理器」擋不住：Node 會依序呼叫每一個監聽器，多加一個自己的，glpk 那個還是會丟例外。把 glpk 的監聽器移掉也不可靠，因為下一次呼叫 `GLPK()` 又會註冊回來。
+
+## 修法：讓錯誤回到呼叫端
+
+我們沒有加全域的處理器。後端負責人的設計是讓行程結束、由 Docker 重啟，有時候就是需要這個重啟；所以修的是每一個漏接的點，而不是在最外層全部吞掉。
+
+1. **16 處改回普通的 `await`。** 第一版我把它們改成 async IIFE，code review 時改成最直接的寫法：
+
+   ```js
+   const rows = await col.find({ pid, uid }).sort({ tid: 1 }).toArray();
+   ```
+
+   錯誤現在會回到呼叫端，由原本就在那裡的 `try/catch` 處理。
+2. **啟動時連不上資料庫就重試。** 每次建立新的 client，連上之後才換上去，失敗的那個關掉，固定等 5 秒再試；伺服器在連上之前不開始接請求。
+
+## 上線前先在本機重現
+
+修法要先證明「舊版會死、新版不會」：同樣的 Node 18.20.3、MongoDB driver 6.13.1、glpk.js 4.0.2，本機開一個 MongoDB 7，20 條迴圈同時讀寫。
+
+- **資料庫重啟 2 秒：重現不出來。** driver 自己會重試，等得到就沒事。
+- **資料庫停 40 秒**（超過 driver 預設的 30 秒等待）：舊版出現錯誤後以 exit code 7 結束；新版記下錯誤和 14 筆沒寫進去的紀錄，資料庫回來後繼續服務。
+- **啟動時資料庫就不在：** 舊版直接結束；新版每 5 秒重試，連上後正常啟動。
+
+第一個嘗試沒重現，是因為斷線時間比 driver 的等待短。重現的條件要對準真正的觸發點，不然「沒事」什麼都證明不了。
+
+## 上線一週後，資料庫又斷了一次
+
+修正在 10-31 以金絲雀方式上線。11-07 晚上，資料庫又在一秒內切斷了 8 台裡 5 台的連線：這次 **0 次重啟**。
+
+但不崩潰不代表沒有影響：那一秒裡有 59 筆遊戲紀錄沒寫進去。錢包那一側已經完成，玩家餘額是對的，缺的只是紀錄。因為每筆寫入失敗都把完整內容記在日誌裡，兩天後經過核准，先 dry run、型別對齊原本的寫入程式，再補寫進去，59 筆讀回全部一致。
+
+## 順手修的連線池
+
+查的過程中發現每台伺服器開著 22～44 條資料庫連線，流量明明不需要這麼多。設定 `maxIdleTimeMS` 想讓閒置連線自己關掉，結果沒有效果：driver 6.13.1 只有在 `minPoolSize > 0` 時才會清閒置連線。
+
+本機實測：都不設 26 → 26 條，只設閒置時間 10 → 10 條，兩個都設 11 → 1 條。上線後在同樣的流量下，每台降到 4～5 條。
+
+## 學到的事
+
+- **`new Promise(async …)` 幾乎都是 bug。** 交給 lint 規則抓，不要靠 code review 的眼睛。
+- **第三方套件可能改掉整個行程的錯誤處理。** 在 `node_modules` 裡搜一次 `process.on(`，比猜快。
+- **重現要對準觸發條件。** 斷 2 秒重現不出來，斷 40 秒才會；差別在 driver 的 30 秒等待。
+- **不崩潰之後，下一個問題是資料有沒有寫進去。** 寫入失敗時把完整內容記下來，事後才補得回來。

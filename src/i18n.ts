@@ -19,12 +19,12 @@ export const ui = {
     'nav.about': '關於',
     'nav.contact': '聯絡',
 
-    'hero.eyebrow': '前端工程師 / 遊戲開發',
+    'hero.eyebrow': 'Front-end Tech Lead / 遊戲開發',
     'hero.title.line1': '為遊戲',
     'hero.title.line2': '寫一行行',
     'hero.title.line3': '結構與秩序',
     'hero.subtitle':
-      '十一年遊戲產業工程經驗。專注於 Cocos Creator、TypeScript、狀態機架構，以及把混亂的開發流程改造成可重複的系統。',
+      '十一年遊戲產業工程經驗，2020 年起擔任前端 Lead。專注於 Cocos Creator、TypeScript、狀態機架構，以及把混亂的開發流程改造成可重複的系統。',
     'hero.cta.work': '看作品',
     'hero.cta.writing': '看文章',
 
@@ -68,12 +68,12 @@ export const ui = {
     'nav.about': 'About',
     'nav.contact': 'Contact',
 
-    'hero.eyebrow': 'Frontend Engineer / Game Developer',
+    'hero.eyebrow': 'Front-end Tech Lead / Games',
     'hero.title.line1': 'Writing structure',
     'hero.title.line2': 'into the chaos',
     'hero.title.line3': 'of game code',
     'hero.subtitle':
-      'Eleven years building games. Focused on Cocos Creator, TypeScript, state-machine architecture, and turning messy development pipelines into repeatable systems.',
+      'Eleven years building games, leading front-end teams since 2020. Focused on Cocos Creator, TypeScript, state-machine architecture, and turning messy development pipelines into repeatable systems.',
     'hero.cta.work': 'See work',
     'hero.cta.writing': 'Read writing',
 

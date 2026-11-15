@@ -81,7 +81,7 @@ Claude Code 每次執行指令前，都會先經過我寫的一個 hook（`PreTo
 
 Cocos Creator 是桌面程式，AI 原本碰不到裡面的場景和 prefab，只能請人點。
 
-**cocos-mcp** 是我做的開源專案：一個跑在 Cocos Creator 編輯器行程裡的 MCP server，讓 AI 可以查詢即時的場景樹、讀寫資產、啟動建置、讀 log，並截圖確認自己剛剛做了什麼。
+**[cocos-mcp](https://github.com/az198071123/cocos-mcp)** 是我做的開源專案（MIT 授權）：一個跑在 Cocos Creator 編輯器行程裡的 MCP server，讓 AI 可以查詢即時的場景樹、讀寫資產、啟動建置、讀 log，並截圖確認自己剛剛做了什麼。
 
 其他 Cocos MCP server 動輒 100 多個工具，再加上「工具組合」把大部分藏起來。我只做 11 個工具：幾個通用工具，加上一個能讀編輯器自己 TypeScript 型別定義的工具。AI 先查到函式簽名，再用通用的 `editor_request` 呼叫。零依賴、不用建置，專案根目錄一份 `.mcp.json` 同時給兩端讀，設定就不會不同步。寫入屬性的工具會立刻讀回、回報改前與改後的值，讓「成功了」是量出來的，而不是工具自己說的。
 

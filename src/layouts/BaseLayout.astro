@@ -18,14 +18,14 @@ const t = useTranslations(lang);
 const desc =
   description ??
   (lang === 'zh-TW'
-    ? 'Kano Hong — 前端工程師 / 遊戲開發。Cocos Creator、TypeScript、狀態機架構，把混亂的開發流程改造成可重複的系統。'
-    : 'Kano Hong — Frontend engineer and game developer. Cocos Creator, TypeScript, state-machine architecture, and turning messy pipelines into repeatable systems.');
+    ? 'Kano Hong — Front-end Tech Lead / 遊戲開發。Cocos Creator、TypeScript、狀態機架構，把混亂的開發流程改造成可重複的系統。'
+    : 'Kano Hong — Front-end Tech Lead and game developer. Cocos Creator, TypeScript, state-machine architecture, and turning messy pipelines into repeatable systems.');
 
 const fullTitle = title.includes('Kano') ? title : `${title} — Kano Hong`;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const ogImageURL = ogImage
   ? new URL(ogImage, Astro.site).toString()
-  : new URL('/og-default.png', Astro.site).toString();
+  : new URL(lang === 'en' ? '/og-default-en.png' : '/og-default.png', Astro.site).toString();
 ---
 
 <!doctype html>

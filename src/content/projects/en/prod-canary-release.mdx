@@ -46,7 +46,7 @@ import Video from '~/components/Video.astro';
 In October 2026 this slot platform's game servers moved from K8s to a single Docker host: 8 game-server containers on one production machine, with every spin touching a player's wallet. When I took over operations there were two problems:
 
 - **No set way to release.** Every release was a real-money change, without a procedure that could be repeated and verified.
-- **When the database dropped, all 8 crashed.** When the database cut every connection in the same millisecond, all 8 containers exited and restarted, and bets in flight got no response. It happened twice in October.
+- **When the database dropped, all 8 crashed.** The database dropped twice in late October, and both times the servers crashed. On 10-30 all 8 containers exited within 40 ms of the disconnect and restarted, and bets in flight got no response.
 
 ## My role
 
@@ -72,7 +72,7 @@ The real cause was in the code. Database calls were wrapped as `await new Promis
 
 The fix turned those 16 places into ordinary async functions so errors reach the caller, and added a startup retry. Before shipping, I reproduced it locally with the same MongoDB and Node.js versions and the same library loaded, stopped the database for 40 seconds, and confirmed the fixed version no longer exits.
 
-A week after the fix went live, the database dropped again. This time: **0 restarts**.
+A week after the fix went live, the database dropped again. This time: **0 restarts**. The code-level details, and how I reproduced it locally, are in “[The database blinked and all 8 game servers exited](/en/writing/unhandled-rejection-crash/)”.
 
 ## Decision 3: monitoring should answer "what just happened?"
 
@@ -88,5 +88,5 @@ A week after the fix went live, the database dropped again. This time: **0 resta
 ## What I learned
 
 - **With real money, every step must be able to turn back.** Building offline, comparing settings and swapping one server first are all there to stop before something breaks, not to roll back after it does.
-- **When all 8 die together, suspect what they share.** Ending in the same millisecond is unlikely to be 8 independent bugs. Sort the events by time once and you see who moved first.
+- **When all 8 die together, suspect what they share.** Ending within a few dozen milliseconds of each other is unlikely to be 8 independent bugs. Sort the events by time once and you see who moved first.
 - **Alerts must be explicit.** A restart buried in a summary is no alert at all.

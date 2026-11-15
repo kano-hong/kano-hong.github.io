@@ -81,7 +81,7 @@ Tuning a skill's trigger description had its own trap. The evaluation tool runs 
 
 Cocos Creator is a desktop app. The AI couldn't reach the scenes and prefabs inside it and had to ask a person to click.
 
-**cocos-mcp** is an open-source project of mine: an MCP server that runs inside the Cocos Creator editor process, so the AI can query the live scene tree, read and write assets, start builds, read logs, and take screenshots to check what it just did.
+**[cocos-mcp](https://github.com/az198071123/cocos-mcp)** is an open-source project of mine (MIT-licensed): an MCP server that runs inside the Cocos Creator editor process, so the AI can query the live scene tree, read and write assets, start builds, read logs, and take screenshots to check what it just did.
 
 Other Cocos MCP servers ship over 100 tools and then hide most of them behind "toolsets". I built 11: a few general-purpose tools, plus one that reads the editor's own TypeScript type definitions. The AI looks up a function's signature first, then calls it through the general `editor_request`. There are zero dependencies and no build step, and a single `.mcp.json` at the project root is read by both sides, so the configuration can't drift. Tools that write a property read it straight back and report the value before and after, so "it worked" is measured, not just claimed by the tool.
 

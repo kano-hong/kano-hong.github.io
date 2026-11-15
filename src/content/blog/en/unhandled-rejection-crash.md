@@ -1,0 +1,107 @@
+---
+title: "The database blinked and all 8 game servers exited: new Promise(async) and a math library"
+summary: Eight Node.js game servers in production exited within 40 ms of a database disconnect. Two things stacked up. Sixteen new Promise(async …) wrappers turned errors into unhandled rejections, and a library compiled with emscripten turned those into a process exit. This post covers how I tracked it down, fixed it, and reproduced it locally.
+date: 2026-11-15
+tags:
+  - Node.js
+  - MongoDB
+  - Error handling
+  - Production
+series: Production notes
+readTime: 7
+lang: en
+slug: unhandled-rejection-crash
+---
+
+This is the technical companion to “[Real-money releases in production](/en/work/prod-canary-release/)”. The case study covers the release process; this post covers where in the code the crash came from.
+
+## What happened: 8 servers exited within 40 ms
+
+The service is a game server for a slot platform: Node.js 18, 8 containers on one production host, sharing one MongoDB.
+
+Early on 2026-10-30, all 8 containers lost their database connections within 8 ms and then exited together. Docker restarted them and service was back in about 11 seconds. An earlier disconnect, on 10-24, had caused nearly an hour of crash-looping.
+
+## Ruling out the host
+
+A Docker config change had gone in that day, so it was the first suspect. I checked the host:
+
+- dockerd and containerd had restarted 0 times since boot.
+- Only the 8 game servers had restarted, once each. The other 9 containers on the same host were at 0.
+- The system journal, in millisecond order: database disconnect (.462–.470) → process exit (.485–.505) → Docker tears down the network → restart. The network change came **after** the exit; it was an effect, not the cause.
+
+One small trap: the host runs on UTC+8, and my first journal query in UTC looked at the wrong window.
+
+Eight processes ending within a few dozen milliseconds of each other is unlikely to be eight independent bugs. It is more likely that something they all depend on failed first, and the same code took each process down.
+
+## Layer 1: new Promise(async) swallows the error
+
+All database access lives in one utility file, with 16 places shaped like this (names changed):
+
+```js
+const rows = await new Promise(async (resolve, reject) => {
+  const col = client.db(dbName).collection('history');
+  resolve(await col.find({ pid, uid }).sort({ tid: 1 }).toArray());
+});
+```
+
+The problem is that the executor is an `async` function. When `find()` fails, the error rejects **the promise the executor itself returns**, but `new Promise` ignores the executor's return value. So:
+
+- The outer promise never resolves or rejects, and the caller's `try/catch` never sees anything.
+- The rejected promise returned by the executor has no handler, so it becomes an unhandled rejection.
+
+ESLint's built-in `no-async-promise-executor` rule exists to catch exactly this.
+
+## Layer 2: a library turns the rejection into an exit
+
+Node 18 already exits on an unhandled rejection by default. Here there was one more layer. The game logic uses glpk.js, a linear-programming library compiled with emscripten, and under Node it registers two handlers:
+
+```js
+process.on('uncaughtException', (e) => { if (!(e instanceof ExitStatus)) throw e; });
+process.on('unhandledRejection', (e) => { throw e; });
+```
+
+A rejection comes in and it throws. That throw becomes an uncaught exception, whose handler throws again, and the process exits with code 7. The registration runs on every call to `GLPK()`, and this project calls it at module load, so it is active from startup.
+
+That is also why “just add a global error handler” doesn't help. Node calls every listener in turn, so adding your own still leaves glpk's throwing. Removing glpk's listeners isn't reliable either, because the next `GLPK()` call registers them again.
+
+## The fix: let errors reach the caller
+
+We did not add a global handler. The backend owner's design is to let the process exit and have Docker restart it, and sometimes that restart is exactly what's wanted. So we fixed each leak point instead of swallowing everything at the top.
+
+1. **All 16 places went back to a plain `await`.** My first version used an async IIFE; code review changed it to the most direct form:
+
+   ```js
+   const rows = await col.find({ pid, uid }).sort({ tid: 1 }).toArray();
+   ```
+
+   Errors now reach the caller and the `try/catch` that was already there.
+2. **Retry when the database is down at startup.** Each attempt builds a new client, swaps it in only after it connects, closes the failed one, and waits a fixed 5 seconds. The server does not accept requests until it is connected.
+
+## Reproducing it locally before shipping
+
+The fix had to show that the old build dies and the new one doesn't. I used the same Node 18.20.3, MongoDB driver 6.13.1 and glpk.js 4.0.2, a local MongoDB 7, and 20 loops reading and writing at once.
+
+- **Database restarted for 2 seconds: no repro.** The driver retries on its own, and the wait was short enough.
+- **Database stopped for 40 seconds** (longer than the driver's default 30-second wait): the old build hit an error and exited with code 7. The new build logged the errors and the 14 records it couldn't write, then kept serving once the database came back.
+- **Database missing at startup:** the old build exited. The new build retried every 5 seconds and started normally once connected.
+
+The first attempt failed to reproduce because the outage was shorter than the driver's wait. A repro has to hit the real trigger, or “nothing happened” proves nothing.
+
+## A week later, the database dropped again
+
+The fix went out as a canary release on 10-31. On the evening of 11-07 the database cut connections to 5 of the 8 servers within one second. This time there were **0 restarts**.
+
+Not crashing didn't mean no impact. In that second, 59 game records failed to write. The wallet side had already completed, so player balances were correct; only the records were missing. Because every failed write logged its full payload, two days later, with approval, I backfilled them: a dry run first, types matched to the original writer, and all 59 read back identical.
+
+## The connection pool, fixed along the way
+
+While digging I noticed each server held 22–44 database connections, far more than the traffic needed. Setting `maxIdleTimeMS` to close idle connections did nothing: driver 6.13.1 only prunes idle connections when `minPoolSize > 0`.
+
+A local test: neither set, 26 → 26 connections; idle time only, 10 → 10; both set, 11 → 1. After release, at the same traffic, each server dropped to 4–5.
+
+## What I took away
+
+- **`new Promise(async …)` is almost always a bug.** Let a lint rule catch it rather than relying on reviewers' eyes.
+- **A dependency can change error handling for the whole process.** Searching `node_modules` once for `process.on(` is faster than guessing.
+- **A repro has to match the trigger.** A 2-second outage didn't reproduce it; 40 seconds did. The difference was the driver's 30-second wait.
+- **Once it stops crashing, the next question is whether the data got written.** Log the full payload when a write fails, so you can put it back later.
