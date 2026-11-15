@@ -49,23 +49,47 @@ const stack = [
   'Prometheus / Grafana', 'ELK', 'Python', 'Claude Code · MCP',
 ];
 
-const clips = lang === 'zh-TW'
+const clipGroups = lang === 'zh-TW'
   ? [
-      { src: '/videos/showcase-holdem-web.mp4', poster: '/videos/showcase-holdem-web.jpg', caption: '德州撲克 Web／PWA：大廳 → 公開局列表 → 切換幣別 → 進入系統桌觀賽（UAT 錄影，測試帳號）' },
-      { src: '/videos/showcase-holdem-hand.mp4', poster: '/videos/showcase-holdem-hand.jpg', caption: '德州撲克 Web／PWA 一手牌：發牌 → 行動 → 翻牌、轉牌、河牌 → 攤牌 → 結算（本機預覽搭配 MSW mock 資料，不是真實牌局）' },
-      { src: '/videos/showcase-subgames.mp4', poster: '/videos/showcase-subgames.jpg', caption: '子遊戲平台：百人德州一局，下注倒數 → 停止下注 → 開牌 → 派彩（UAT 實錄，沒有下注）' },
-      { src: '/videos/showcase-tg-miniapp.mp4', poster: '/videos/showcase-tg-miniapp.jpg', caption: 'Telegram Mini App 版：大廳 → 牌桌 → 切換牌桌主題（staging 實錄，帳號名稱已模糊）' },
-      { src: '/videos/showcase-jg-lobby.mp4', poster: '/videos/showcase-jg-lobby.jpg', caption: 'JG 國際版 Slot 大廳：橫幅、彩金輪播、遊戲列表（本機預覽搭配 MSW mock 資料）' },
-      { src: '/videos/showcase-jg-slot.mp4', poster: '/videos/showcase-jg-slot.jpg', caption: 'JG 國際版麻將主題 Slot：轉輪 → 連續消除、乘數 x1 → x5 → Big Win／Mega Win 動畫（本機預覽搭配 MSW mock 資料）' },
-    ]
+    { title: '德州撲克（Web／PWA、Telegram Mini App）', clips: [
+        { src: '/videos/showcase-holdem-web.mp4', poster: '/videos/showcase-holdem-web.jpg', caption: '德州撲克 Web／PWA：大廳 → 公開局列表 → 切換幣別 → 進入系統桌觀賽（UAT 錄影，測試帳號）' },
+        { src: '/videos/showcase-holdem-hand.mp4', poster: '/videos/showcase-holdem-hand.jpg', caption: '德州撲克 Web／PWA 一手牌：發牌 → 行動 → 翻牌、轉牌、河牌 → 攤牌 → 結算（本機預覽搭配 MSW mock 資料，不是真實牌局）' },
+        { src: '/videos/showcase-tg-miniapp.mp4', poster: '/videos/showcase-tg-miniapp.jpg', caption: 'Telegram Mini App 版：大廳 → 牌桌 → 切換牌桌主題（staging 實錄，帳號名稱已模糊）' },
+      ] },
+    { title: '子遊戲平台（百人遊戲與輪盤）', clips: [
+        { src: '/videos/showcase-subgames.mp4', poster: '/videos/showcase-subgames.jpg', caption: '子遊戲平台：百人德州一局，下注倒數 → 停止下注 → 開牌 → 派彩（UAT 實錄，沒有下注）' },
+        { src: '/videos/showcase-jinhua.mp4', poster: '/videos/showcase-jinhua.jpg', caption: '百人金花一局：停止下注 → 翻牌 → 贏家區亮起、派彩（UAT 實錄，沒有下注）' },
+        { src: '/videos/showcase-niuniu.mp4', poster: '/videos/showcase-niuniu.jpg', caption: '百人牛牛一局：停止下注 → 開牌、牌型 → 派彩（UAT 實錄，沒有下注）' },
+        { src: '/videos/showcase-forest.mp4', poster: '/videos/showcase-forest.jpg', caption: '森林舞會（動物輪盤）：停止下注 → 轉盤 → 開獎亮格（UAT 實錄，沒有下注）' },
+        { src: '/videos/showcase-ruins.mp4', poster: '/videos/showcase-ruins.jpg', caption: '遺跡輪盤（麻將牌輪盤）：停止下注 → 轉盤 → 開獎（UAT 實錄，沒有下注）' },
+        { src: '/videos/showcase-horse.mp4', poster: '/videos/showcase-horse.jpg', caption: '馬年旺轉（新春輪盤）：停止下注 → 轉盤 → 開獎（UAT 實錄，沒有下注）' },
+      ] },
+    { title: 'JG 國際版 Slot', clips: [
+        { src: '/videos/showcase-jg-lobby.mp4', poster: '/videos/showcase-jg-lobby.jpg', caption: 'JG 國際版 Slot 大廳：橫幅、彩金輪播、遊戲列表（本機預覽搭配 MSW mock 資料）' },
+        { src: '/videos/showcase-jg-slot.mp4', poster: '/videos/showcase-jg-slot.jpg', caption: 'JG 國際版麻將主題 Slot：轉輪 → 連續消除、乘數 x1 → x5 → Big Win／Mega Win 動畫（本機預覽搭配 MSW mock 資料）' },
+        { src: '/videos/showcase-s8.mp4', poster: '/videos/showcase-s8.jpg', caption: 'JG 國際版 Slot《雙味對決》：轉輪 → 中獎 → Big Win 升到 Mega Win → Full Combo（本機預覽搭配 MSW mock 資料）' },
+      ] },
+  ]
   : [
-      { src: '/videos/showcase-holdem-web.mp4', poster: '/videos/showcase-holdem-web.jpg', caption: 'Texas Hold’em web / PWA: lobby → public tables → switch currency → watch a system table (UAT recording, test account)' },
-      { src: '/videos/showcase-holdem-hand.mp4', poster: '/videos/showcase-holdem-hand.jpg', caption: 'A hand of Texas Hold’em on web / PWA: deal → actions → flop, turn, river → showdown → settle (local preview with MSW mock data, not a real game)' },
-      { src: '/videos/showcase-subgames.mp4', poster: '/videos/showcase-subgames.jpg', caption: 'Sub-game platform: a round of 100-player Hold’em — betting countdown → bets close → reveal → payout (UAT recording, no bets placed)' },
-      { src: '/videos/showcase-tg-miniapp.mp4', poster: '/videos/showcase-tg-miniapp.jpg', caption: 'Telegram Mini App edition: lobby → table → switching table themes (staging recording, account name blurred)' },
-      { src: '/videos/showcase-jg-lobby.mp4', poster: '/videos/showcase-jg-lobby.jpg', caption: 'JG international slot lobby: banner, jackpot carousel, game list (local preview with MSW mock data)' },
-      { src: '/videos/showcase-jg-slot.mp4', poster: '/videos/showcase-jg-slot.jpg', caption: 'JG international mahjong-themed slot: a spin → chained clears with the multiplier climbing x1 → x5 → Big Win / Mega Win (local preview with MSW mock data)' },
-    ];
+    { title: 'Texas Hold’em (web / PWA, Telegram Mini App)', clips: [
+        { src: '/videos/showcase-holdem-web.mp4', poster: '/videos/showcase-holdem-web.jpg', caption: 'Texas Hold’em web / PWA: lobby → public tables → switch currency → watch a system table (UAT recording, test account)' },
+        { src: '/videos/showcase-holdem-hand.mp4', poster: '/videos/showcase-holdem-hand.jpg', caption: 'A hand of Texas Hold’em on web / PWA: deal → actions → flop, turn, river → showdown → settle (local preview with MSW mock data, not a real game)' },
+        { src: '/videos/showcase-tg-miniapp.mp4', poster: '/videos/showcase-tg-miniapp.jpg', caption: 'Telegram Mini App edition: lobby → table → switching table themes (staging recording, account name blurred)' },
+      ] },
+    { title: 'Sub-game platform (100-player games and roulettes)', clips: [
+        { src: '/videos/showcase-subgames.mp4', poster: '/videos/showcase-subgames.jpg', caption: 'Sub-game platform: a round of 100-player Hold’em — betting countdown → bets close → reveal → payout (UAT recording, no bets placed)' },
+        { src: '/videos/showcase-jinhua.mp4', poster: '/videos/showcase-jinhua.jpg', caption: '100-player Golden Flower: bets close → cards flip → the winning side lights up and pays (UAT recording, no bets placed)' },
+        { src: '/videos/showcase-niuniu.mp4', poster: '/videos/showcase-niuniu.jpg', caption: '100-player Niu Niu: bets close → hands revealed with their ranks → payout (UAT recording, no bets placed)' },
+        { src: '/videos/showcase-forest.mp4', poster: '/videos/showcase-forest.jpg', caption: 'Forest Party animal roulette: bets close → the wheel spins → the winning cell lights up (UAT recording, no bets placed)' },
+        { src: '/videos/showcase-ruins.mp4', poster: '/videos/showcase-ruins.jpg', caption: 'Ruins Roulette with mahjong tiles: bets close → the wheel spins → result (UAT recording, no bets placed)' },
+        { src: '/videos/showcase-horse.mp4', poster: '/videos/showcase-horse.jpg', caption: 'Year of the Horse lunar roulette: bets close → the wheel spins → result (UAT recording, no bets placed)' },
+      ] },
+    { title: 'JG international slots', clips: [
+        { src: '/videos/showcase-jg-lobby.mp4', poster: '/videos/showcase-jg-lobby.jpg', caption: 'JG international slot lobby: banner, jackpot carousel, game list (local preview with MSW mock data)' },
+        { src: '/videos/showcase-jg-slot.mp4', poster: '/videos/showcase-jg-slot.jpg', caption: 'JG international mahjong-themed slot: a spin → chained clears with the multiplier climbing x1 → x5 → Big Win / Mega Win (local preview with MSW mock data)' },
+        { src: '/videos/showcase-s8.mp4', poster: '/videos/showcase-s8.jpg', caption: 'JG international slot “Battle of the Flavors”: a spin → a win → Big Win climbing to Mega Win → Full Combo (local preview with MSW mock data)' },
+      ] },
+  ];
 
 const timeline = lang === 'zh-TW'
   ? [
@@ -109,9 +133,14 @@ const genresShipped = lang === 'zh-TW'
           ? '我帶團隊做的前端，都已上線；以下錄自測試環境與本機預覽，只錄遊戲畫面。'
           : 'Front-ends my team built, all in production. Recorded on test environments and a local preview, game screen only.'}
       </p>
-      <div class="clips">
-        {clips.map((c) => <Video src={c.src} poster={c.poster} caption={c.caption} />)}
-      </div>
+      {clipGroups.map((g) => (
+        <div class="clip-group">
+          <h3 class="clip-group-title">{g.title}</h3>
+          <div class="clips">
+            {g.clips.map((c) => <Video src={c.src} poster={c.poster} caption={c.caption} />)}
+          </div>
+        </div>
+      ))}
     </div>
 
     <hr />
@@ -279,6 +308,17 @@ const genresShipped = lang === 'zh-TW'
   .clips-intro {
     color: var(--ink-soft);
     margin-bottom: 0.5rem;
+  }
+
+  .clip-group + .clip-group {
+    margin-top: 2rem;
+  }
+
+  .clip-group-title {
+    font-size: var(--step-0);
+    font-weight: 600;
+    color: var(--ink);
+    margin: 1.25rem 0 0.25rem;
   }
 
   .clips {

@@ -1,5 +1,5 @@
 ---
-// 短循環影片（無聲、自動播放、可暫停）。src 留空時只在開發模式顯示占位框，正式建置不輸出。
+// 短循環影片（無聲、捲到畫面裡才載入並播放，離開就暫停）。src 留空時只在開發模式顯示占位框，正式建置不輸出。
 interface Props {
   src?: string;
   poster?: string;
@@ -14,12 +14,12 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <video
       src={`${base}${src}`}
       poster={poster && `${base}${poster}`}
-      autoplay
       muted
       loop
       playsinline
       controls
-      preload="metadata"
+      preload="none"
+      data-inview
     />
     <figcaption>{caption}</figcaption>
   </figure>
@@ -29,6 +29,22 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <figcaption>{caption}</figcaption>
   </figure>
 )}
+
+<script>
+  // 一頁有很多段影片時，同時自動播放會一次下載全部：改成進入畫面才播放、離開就暫停。
+  const videos = document.querySelectorAll<HTMLVideoElement>('video[data-inview]');
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!still && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        const v = e.target as HTMLVideoElement;
+        if (e.isIntersecting) v.play().catch(() => {});
+        else v.pause();
+      }
+    }, { threshold: 0.25 });
+    videos.forEach((v) => io.observe(v));
+  }
+</script>
 
 <style>
   .video {
