@@ -1,130 +1,123 @@
 ---
-title: 為什麼我們用 XState 重構遊戲狀態管理
-summary: 一個拉霸機台的 spin 流程裡有十幾個非同步狀態：等下注、扣餘額、發牌、播動畫、結算、領獎。我們最早用 boolean flag 管，後來用 enum，最後用 XState——這篇是中間的轉折過程。
-date: 2026-04-12
-updated: 2026-04-15
+title: 同一份狀態機，跑在遊戲、單元測試和 k6 壓測裡
+summary: 德州撲克平台的登入、大廳、斷線重連原本散在各個場景裡。我把流程改成 xstate 狀態機，並把「定義」和「實作」拆開，讓同一份狀態機能在 Cocos、Vitest、k6 三個環境裡跑。這篇記錄做法，以及實際踩過的坑。
+date: 2026-11-15
 tags:
   - XState
   - 狀態機
-  - 遊戲架構
+  - k6
+  - 測試
   - Cocos Creator
 series: 遊戲架構筆記
-readTime: 14
+readTime: 8
 lang: zh-TW
 slug: why-we-refactored-with-xstate
 ---
 
-## 一切都從一個 bug 開始
+這篇是〈[子遊戲框架](/work/subgame-state-machines/)〉的技術補充：案例那篇講決策和結果，這篇講程式碼怎麼寫、在 k6 裡怎麼跑起來。
 
-那是某個版本快上線前一週的事。QA 回報了一個 bug：在拉霸遊戲裡，如果在 free spin 動畫播到一半時切到背景再切回來，下一次 spin 會跳過扣款步驟，直接送伺服器一個沒帶餘額的請求。
+## 起點：三個問題
 
-我接手 debug 的時候，第一個動作是打開那支處理 spin 流程的檔案。然後就看到了這個：
+2025 年底到 2026 年初，我們的德州撲克平台要在同一條 WebSocket 連線裡加入多款子遊戲。當時有三個問題：
 
-```typescript
-class SpinController {
-  private _isSpinning = false;
-  private _isAnimating = false;
-  private _isFreeSpin = false;
-  private _isPaused = false;
-  private _hasResult = false;
-  private _isCollecting = false;
-  // ... 還有八個 flag
-}
-```
+- **斷線重連很亂**：重連失敗後玩家會卡住；App 從背景切回來會重複重連；重連回來後，畫面和資料有時對不起來。
+- **子遊戲要共用流程**：登入、大廳、斷線重連不能每款遊戲各寫一次。
+- **壓測要跑真實流程**：k6 腳本如果自己再寫一套流程，就會和遊戲越差越遠，壓到的不是玩家真正會走的路。
 
-十四個 boolean。
+第三點是讓我決定「定義和實作分開」的原因。
 
-而且這些 boolean 不是平行的——`isPaused` 只在 `isAnimating` 為 true 的時候有意義；`hasResult` 為 true 的時候 `isSpinning` 應該已經是 false 了。它們之間有大量隱性的合法/非法組合，但這些組合從來沒有被寫下來。
+## 做法 1：狀態機只宣告它需要什麼
 
-那個 bug 的根因，是某個地方在還原背景的時候，沒有同時還原 `isCollecting`，於是一個本該被擋下來的請求過了 guard。
+大廳狀態機需要「送出進桌請求」這件事，但它不知道、也不該知道請求怎麼送。所以在定義裡只放一個有型別的空位：
 
-## 第一階段：enum 化
-
-我那時還不認識 XState，但已經知道 boolean flag 不對。第一次嘗試是改寫成 enum：
-
-```typescript
-enum SpinState {
-  Idle,
-  WaitingBet,
-  Deducting,
-  Spinning,
-  Animating,
-  Showing Result,
-  Collecting,
-}
-```
-
-立刻好了很多——至少我能保證遊戲在任何瞬間只處在一個狀態。
-
-但很快又遇到新問題。Free spin 不是「狀態」，是「模式」——它跟正常 spin 走同一套狀態，但每個狀態的行為要稍微不同（不扣款、自動再轉、有不同動畫）。如果用 enum 表達，要嘛變成兩倍的 enum 數量（FreeSpinAnimating、NormalAnimating ...），要嘛要在每個狀態裡判斷 `mode === 'free'`。前者爆炸，後者又退回 boolean flag 的世界，只是穿了 enum 外衣。
-
-更難解的是「平行狀態」——音效是獨立播放的，UI 也是獨立的，這些東西不該被綁進 spin 主流程的 enum 裡。但目前的設計沒有「平行」這個概念。
-
-## 第二階段：發現 XState
-
-XState 對我來說最關鍵的兩個概念是 **hierarchical states**（巢狀狀態）跟 **parallel states**（平行狀態）。
-
-巢狀狀態解決 mode 問題：
-
-```typescript
-const spinMachine = createMachine({
-  initial: 'idle',
-  states: {
-    idle: { /* ... */ },
-    spinning: {
-      initial: 'normal',
-      states: {
-        normal: { /* ... */ },
-        free: { /* ... */ },
-      },
-      states: {
-        deducting: { /* ... */ },
-        animating: { /* ... */ },
-        showingResult: { /* ... */ },
-      },
+```ts
+export const lobbyMachine = setup({
+    types: { /* context、events、output、input */ },
+    actors: {
+        // 只宣告輸入輸出型別，沒有實作
+        sendEnterTableRequest: {} as PromiseActorLogic<boolean, { tableId: string }>,
+        loadLobbyScene: {} as PromiseActorLogic<void, void>,
     },
-  },
+    guards: { /* 只讀 context 與 event 的判斷 */ },
+}).createMachine({ /* 狀態與轉換 */ });
+```
+
+真正的實作放在另一個檔案，建立 actor 的時候才注入：
+
+```ts
+// LobbyMachine.impl.ts：遊戲裡的實作
+export const lobbyMachineImplementations = {
+    sendEnterTableRequest: fromPromise<boolean, { tableId: string }>(async ({ input }) =>
+        GameHandler.sendEnterTableRequest(input.tableId),
+    ),
+};
+
+// 建立頂層 actor 時，把各場景的實作塞進子狀態機
+pokerMasterActor = createActor(
+    pokerMasterMachine.provide({
+        actors: {
+            loginMachine: loginMachine.provide({ actors: implementations.login }),
+            lobbyMachine: lobbyMachine.provide({ actors: implementations.lobby }),
+            texasMachine,
+        },
+    }),
+    browserInspector ? { inspect: browserInspector } : {},
+);
+```
+
+這樣定義檔裡沒有任何 Cocos 的程式碼，型別也保證每個環境提供的實作長得一樣。最後那個 `inspect` 只在網址帶 `?inspect`、而且不在編輯器裡時，才動態載入 Stately 的即時狀態圖，平常玩家不會載到它。
+
+## 做法 2：讓 Cocos 的程式碼在 k6 裡跑
+
+k6 不是瀏覽器也不是 Node：沒有 `cc`、沒有 `window`，也不支援某些語法。我用 vite 打包壓測腳本，靠別名把遊戲碼依賴的東西一個個換掉：
+
+```ts
+alias: [
+    // WebSocket 走依賴注入：正式版、單元測試、k6 各有一個工廠
+    { find: "@/base/websocket/IWebSocketFactory", replacement: "src/mocks/handlers/K6WebSocketFactory.ts" },
+    // 引擎換成替身（cc/env 要排在 cc 前面，不然會被 cc 先比對到）
+    { find: "cc/env", replacement: "src/polyfills/cc-env.ts" },
+    { find: "cc", replacement: "src/polyfills/cc.ts" },
+    // k6 不支援 for await，改用不依賴 axios 的工具模組
+    { find: "cocos-root/dist/utils-crypto.mjs", replacement: "…/cocos-root/dist/utils-crypto.mjs" },
+]
+```
+
+WebSocket 這一層一開始就設計成工廠，所以 k6 只要換一個工廠，上面的封包解析、資料模型、狀態機全部照用。
+
+壓測機器人啟動時，向註冊表登記的是和遊戲完全相同的子遊戲模組：
+
+```ts
+gameRegistry.register({
+    gameId: GameId.RouletteAG5,
+    machine: Ag5Machine,
+    handlerFactory: (model) => new Ag5MessageHandler(model as Ag5GameDataModel),
+    modelFactory: () => new Ag5GameDataModel({}),
 });
 ```
 
-平行狀態解決 UI/音效獨立性問題——把它們放在獨立的 region 裡，互不干擾，但共享同一個 event bus。
+所以 k6 裡的機器人跑的就是遊戲本身的輪盤狀態機。實測在 UAT 用 1 個機器人跑一輪：連線、進遊戲、進桌、下注、收到派彩、離桌，7 項檢查全部通過。錄影在〈[子遊戲框架](/work/subgame-state-machines/)〉那篇。
 
-更重要的是 XState 強迫我把所有的「合法 transition」寫下來。原本散落在十幾個 method 裡的「if isXXX && !isYYY」邏輯，現在都被收斂到一個地方：state machine 的 `on` block。看不到的合法性變成看得到的。
+## 做法 3：單元測試只測「下一步是什麼」
 
-## 重構過程的真實樣貌
+因為定義裡沒有副作用，Vitest 可以直接對狀態機送事件、看它停在哪個狀態，不用啟動引擎。斷線重連這種最容易出錯的流程，就各自有專門的測試檔（例如 `GameMachine.reconnect.test.ts`、`LobbyMachine.reconnect.test.ts`）。平台和子遊戲的狀態機加起來有 132 個測試。
 
-實際做下去之後，第一個發現是「重構」這個詞太美化了，實際上是「重寫」。整支 SpinController 超過 800 行，幾乎沒有 unit test（因為原本的設計極難測——boolean flag 的笛卡爾積太大），所以我能依靠的只有 QA 的整合測試 case。
+## 踩過的坑
 
-策略是分兩段：
+**k6 裡沒有頂層 actor。** 跑壓測時會看到這行警告：
 
-1. **先把 state machine 寫出來，但放在原本的 code 旁邊跑空轉。** 每當原本的 code 觸發某個動作（例如 `startSpin()`），我同時 send 一個對應 event 給 state machine。然後加 log，比對 state machine 認為「現在應該在什麼狀態」跟原本的 boolean flag 組合是否一致。
+```
+WARN [PokerMasterActor] send called before actor creation { type: "game.startGame" }
+```
 
-2. **驗證一個流程一致之後，才把那段流程的實際行為（呼叫 server、播動畫）搬到 state machine 的 `actions` 或 `services` 裡，並把原本 code 刪掉。**
+子遊戲進桌後會通知頂層的 app 狀態機，但 k6 只建了壓測自己的流程狀態機，沒有建 app 那台，所以事件被丟掉。在 k6 裡不影響結果，但它說明了一件事：子遊戲其實隱含依賴「頂層 actor 一定存在」。共用程式碼的代價，是要清楚知道哪些依賴在別的環境不存在。
 
-這個策略花了大概兩週，比一開始預估的長一倍。但好處是任何一個 commit 都能上線——我從來沒有讓 main branch 處在「重構到一半、不能正常運作」的狀態。
+**k6 打包要讀編輯器產生的設定。** 專案的 `tsconfig.json` 繼承 `temp/tsconfig.cocos.json`，這個檔案由 Cocos Creator 打開專案時產生，而且不進 git。一份從來沒用編輯器開過的 clone，k6 打包會直接失敗。
 
-## 結果：那個 bug 解掉了嗎
+**壓測工具也會壞掉。** 壓測的會員登入網址和 UAT 的閘道網址都寫死在設定裡，一段時間沒人跑就過期了：登入回 404，30 秒送出 313 次請求、全部失敗，k6 卻還是正常結束。後來我加上用環境變數直接帶入 userId 和 token 的選項，跳過會員站登入，才能在 UAT 重新跑起來。教訓是：k6 的 `checks` 沒有任何一項時，門檻「全部通過」也會成立，要看實際跑了幾項。
 
-解掉了，但更重要的是它變得「不可能再發生」。
+## 小結
 
-原本的 bug 是「狀態被部分還原」——切到背景時保存了一部分 flag，回前景時沒全部還原。在 XState 裡，整個 machine 的狀態是一個 atomic snapshot，序列化跟反序列化都是一行 code，沒辦法只還原一半。
-
-更普遍地說，過去 QA 找到的 bug 有一大類是「在 X 狀態下不應該能做 Y」。在 boolean flag 的世界裡，這種 bug 是隨機散落的，因為合法性沒有集中表達。在 state machine 裡，這種 bug 只可能來自「我忘了在 state X 上加上 `on: { Y: ... }`」，而 X 跟 Y 都是有限的、可窮舉的，所以這類 bug 變成可以系統性消滅的東西。
-
-## 我會推薦每個遊戲專案都用 XState 嗎？
-
-不會。
-
-XState 的學習曲線不平，actor model 跟 services 對沒看過函數式狀態機的人來說很燒腦。如果你的遊戲狀態真的只有「Idle / Playing / GameOver」三個，引入 XState 是大砲打小鳥。
-
-但如果你的某個 controller 已經出現超過五個互相耦合的 boolean flag——尤其是這些 flag 之間有時序關係——那它幾乎一定要重構成狀態機。語法不一定要用 XState，可能是手寫一個小型的 state machine 也行。但「合法狀態必須被顯式列舉」這件事，是無論用什麼工具都該堅持的。
-
-## 後續
-
-那次重構之後大半年，我們在另外兩個專案（一個輪盤、一個德州撲克）開始的時候就直接用 XState。第二個專案有趣的地方是，因為一開始就用狀態機建模，整個 spin 流程的設計討論變得異常順暢——產品端在白板上畫的狀態圖，幾乎可以直接 1:1 翻成 code。
-
-我把這個現象理解成：好的工具會反向影響上游的工作流。當大家都知道「最終會被建模成狀態機」，設計階段就會自動往可建模的方向收斂。
-
----
-
-*下一篇我會寫 MobX-Keystone 怎麼跟 XState 搭配——一個管狀態流轉、一個管狀態資料，這兩件事其實是可以乾淨分開的。*
+- **定義只描述「下一步是什麼」**，副作用全部透過 `provide` 注入。
+- **依賴走工廠或別名**，換一個環境只要換掉邊界，不用改中間。
+- **共用之後，要定期在每個環境實際跑一次**，不然最先壞掉的會是最少人跑的那個。
