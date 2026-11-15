@@ -83,9 +83,13 @@ Cocos Creator 是桌面程式，AI 原本碰不到裡面的場景和 prefab，�
 
 **cocos-mcp** 是我做的開源專案：一個跑在 Cocos Creator 編輯器行程裡的 MCP server，讓 AI 可以查詢即時的場景樹、讀寫資產、啟動建置、讀 log，並截圖確認自己剛剛做了什麼。
 
-其他 Cocos MCP server 動輒 100 多個工具，再加上「工具組合」把大部分藏起來。我只做 11 個工具：幾個通用工具，加上一個能讀編輯器自己 TypeScript 型別定義的工具。AI 先查到函式簽名，再用通用的 `editor_request` 呼叫。零依賴、不用建置，專案根目錄一份 `.mcp.json` 同時給兩端讀，設定就不會不同步。
+其他 Cocos MCP server 動輒 100 多個工具，再加上「工具組合」把大部分藏起來。我只做 11 個工具：幾個通用工具，加上一個能讀編輯器自己 TypeScript 型別定義的工具。AI 先查到函式簽名，再用通用的 `editor_request` 呼叫。零依賴、不用建置，專案根目錄一份 `.mcp.json` 同時給兩端讀，設定就不會不同步。寫入屬性的工具會立刻讀回、回報改前與改後的值，讓「成功了」是量出來的，而不是工具自己說的。
 
-<Video caption="待錄：Claude Code 透過 cocos-mcp 在 Cocos Creator 裡建立節點、確認截圖" />
+<Video
+  src="/videos/cocos-mcp-editor.mp4"
+  poster="/videos/cocos-mcp-editor.jpg"
+  caption="實錄：AI 透過 cocos-mcp 操作編輯器，依序建立節點、加上 Label、改文字、放大字體、改成橘色、往上移，最後刪掉（全程沒有人碰滑鼠，也沒有存檔）。"
+/>
 
 **figma-to-cocos** 是把 Figma 設計稿轉成 Cocos 節點的編輯器外掛，改自 Cocos Store 上一個 MIT 授權的版本。我做了一輪完整的稽核與修正：
 
