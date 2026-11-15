@@ -1,0 +1,157 @@
+---
+// 兩欄步驟對照（例如搬遷前／後、修正前／後），按鈕讓一個點沿著兩邊的步驟同時往下走。
+// 有 note 的步驟用橘框標出來，代表「這一步不一樣」。
+interface Step { text: string; note?: string }
+interface Props {
+  columns: { title: string; steps: Step[] }[];
+  caption: string;
+  play: string;
+}
+const { columns, caption, play } = Astro.props;
+const T = { caption, play };
+---
+
+<figure class="flow" data-flow>
+  <div class="cols">
+    {columns.map((col, ci) => (
+      <div class={`col col-${ci}`}>
+        <p class="col-title">{col.title}</p>
+        <ol>
+          {col.steps.map((s) => (
+            <li class={s.note ? 'changed' : ''}>
+              <span class="text">{s.text}</span>
+              {s.note && <span class="note">{s.note}</span>}
+            </li>
+          ))}
+        </ol>
+      </div>
+    ))}
+  </div>
+  <button type="button" data-play>{T.play}</button>
+  <figcaption>{T.caption}</figcaption>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-flow]').forEach((root) => {
+    const btn = root.querySelector<HTMLButtonElement>('[data-play]')!;
+    const cols = [...root.querySelectorAll<HTMLOListElement>('ol')];
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const items = cols.map((ol) => [...ol.children] as HTMLElement[]);
+      items.flat().forEach((li) => li.classList.remove('lit', 'passed'));
+      const n = Math.max(...items.map((l) => l.length));
+      for (let i = 0; i < n; i++) {
+        items.forEach((l) => {
+          l[i - 1]?.classList.replace('lit', 'passed');
+          l[i]?.classList.add('lit');
+        });
+        await new Promise((r) => setTimeout(r, still ? 120 : 520));
+      }
+      btn.disabled = false;
+    });
+  });
+</script>
+
+<style>
+  .flow {
+    margin: 2rem 0;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--paper-tint);
+  }
+  .cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  @media (max-width: 640px) {
+    .cols { grid-template-columns: 1fr; }
+  }
+  .col-title {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    margin-bottom: 0.75rem;
+  }
+  .col-1 .col-title { color: var(--accent); }
+  .flow ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .flow li {
+    position: relative;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--paper);
+    font-size: var(--step--1);
+    line-height: 1.45;
+    color: var(--ink-soft);
+    transition: background var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out);
+  }
+  .flow li + li { margin-top: 1.4rem; }
+  /* 步驟之間的連接線，跑動畫時上面有一顆點往下走 */
+  .flow li + li::before {
+    content: '';
+    position: absolute;
+    left: 1.2rem;
+    top: calc(-1.4rem - 1px);
+    height: 1.4rem;
+    border-left: 2px solid var(--rule);
+  }
+  .flow li + li::after {
+    content: '';
+    position: absolute;
+    left: calc(1.2rem - 3px);
+    top: -1.4rem;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+  }
+  .flow li.lit::after { animation: drop 520ms var(--ease-in-out); }
+  @keyframes drop {
+    from { opacity: 1; transform: translateY(-2px); }
+    to { opacity: 1; transform: translateY(calc(1.4rem - 6px)); }
+  }
+  .flow li.changed { border-color: var(--accent); }
+  .flow li.lit { background: var(--accent-tint); border-color: var(--accent); color: var(--ink); }
+  .flow li.passed { background: var(--paper); }
+  .text { display: block; }
+  .note {
+    display: inline-block;
+    margin-top: 0.35rem;
+    padding: 0.1em 0.5em;
+    border-radius: 3px;
+    background: var(--accent-tint);
+    color: var(--accent-deep);
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+  }
+  button {
+    margin-top: 1.25rem;
+    padding: 0.4em 0.9em;
+    border: 1px solid var(--ink-soft);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--ink);
+    font-size: var(--step--1);
+    cursor: pointer;
+  }
+  button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  button:disabled { color: var(--ink-faint); border-color: var(--rule); cursor: default; }
+  figcaption {
+    margin-top: 0.75rem;
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .flow li.lit::after { animation: none; }
+  }
+</style>

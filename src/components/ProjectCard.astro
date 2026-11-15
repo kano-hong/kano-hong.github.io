@@ -9,15 +9,24 @@ interface Props {
   role: string;
   stack: string[];
   number?: string;
+  cover?: string;
+  coverVideo?: string;
   lang: Lang;
 }
 
-const { href, title, summary, year, role, stack, number, lang } = Astro.props;
+const { href, title, summary, year, role, stack, number, cover, coverVideo, lang } = Astro.props;
 const t = useTranslations(lang);
 ---
 
-<a class="project-card" href={href}>
+<a class={`project-card ${cover ? 'has-cover' : ''}`} href={href}>
   <article>
+    {cover && (
+      <div class="card-media" aria-hidden="true">
+        {coverVideo
+          ? <video src={coverVideo} poster={cover} muted loop playsinline preload="none" data-hover-play></video>
+          : <img src={cover} alt="" loading="lazy" decoding="async" />}
+      </div>
+    )}
     <header class="card-header">
       {number && <span class="card-num">{number}</span>}
       <div class="card-meta">
@@ -40,6 +49,17 @@ const t = useTranslations(lang);
     </ul>
   </article>
 </a>
+
+<script>
+  // 有影片的封面：滑鼠移上去才載入並播放，移開就暫停。觸控裝置只顯示封面圖。
+  if (matchMedia('(hover: hover) and (prefers-reduced-motion: no-preference)').matches) {
+    document.querySelectorAll<HTMLVideoElement>('video[data-hover-play]').forEach((v) => {
+      const card = v.closest('a')!;
+      card.addEventListener('mouseenter', () => { v.play().catch(() => {}); });
+      card.addEventListener('mouseleave', () => { v.pause(); });
+    });
+  }
+</script>
 
 <style>
   .project-card {
@@ -66,6 +86,52 @@ const t = useTranslations(lang);
   .project-card:hover .card-arrow {
     transform: translateX(6px);
     color: var(--accent);
+  }
+
+  .has-cover article {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 17rem;
+    grid-template-areas:
+      'header media'
+      'title media'
+      'summary media'
+      'stack media';
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: 2rem;
+  }
+  .has-cover .card-header { grid-area: header; }
+  .has-cover .card-title { grid-area: title; }
+  .has-cover .card-summary { grid-area: summary; }
+  .has-cover .card-stack { grid-area: stack; align-self: start; }
+  .card-media {
+    grid-area: media;
+    align-self: start;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--paper-tint);
+  }
+  .card-media img,
+  .card-media video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top left;
+    transition: transform var(--duration-slow) var(--ease-out);
+  }
+  .project-card:hover .card-media img,
+  .project-card:hover .card-media video {
+    transform: scale(1.03);
+  }
+  @media (max-width: 720px) {
+    .has-cover article {
+      grid-template-columns: 1fr;
+      grid-template-areas: 'media' 'header' 'title' 'summary' 'stack';
+      grid-template-rows: none;
+    }
+    .card-media { margin-bottom: 1rem; }
   }
 
   .card-header {

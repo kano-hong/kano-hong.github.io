@@ -83,6 +83,8 @@ const team =
             year={p.data.year}
             role={p.data.role}
             stack={p.data.stack}
+            cover={p.data.cover && `${base}${p.data.cover}`}
+            coverVideo={p.data.coverVideo && `${base}${p.data.coverVideo}`}
             number={String(i + 1).padStart(2, '0')}
             lang={lang}
           />

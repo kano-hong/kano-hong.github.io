@@ -14,6 +14,7 @@ tags:
   - CI/CD
   - 遷移
   - 平台維運
+cover: /covers/gitlab-migration.jpg
 featured: true
 order: 2
 lang: zh-TW
@@ -22,6 +23,7 @@ slug: gitlab-migration
 
 import Stats from '~/components/Stats.astro';
 import MigrationWaves from '~/components/demos/MigrationWaves.astro';
+import StepFlow from '~/components/demos/StepFlow.astro';
 
 <Stats
   items={[
@@ -75,6 +77,31 @@ import MigrationWaves from '~/components/demos/MigrationWaves.astro';
 校驗也要對準真正的來源：一開始我拿本機的 mirror 比對，有一次 mirror 只抓了一半，和空的目標比起來「一樣」。之後一律和舊站的 ref 比對。
 
 ## 決策 4：建置流程趁這次收斂
+
+<StepFlow
+  play="送出一次 push"
+  caption="一次 push 走到 staging 的路徑。橘框是這次改掉的地方；按按鈕看一個推送沿著兩邊各跑一次。"
+  columns={[
+    { title: '搬遷前', steps: [
+      { text: '開發者 push' },
+      { text: '舊站 GitLab：4 個群組、283 個 repo' },
+      { text: '每個 repo 一個 webhook，打到轉發器' },
+      { text: '轉發器：依 repo 名稱觸發那款遊戲自己的 job' },
+      { text: 'Jenkins：86 個 job，一款遊戲一個' },
+      { text: '建置腳本：舊站網址和帳密寫死，帳密還會印進 log' },
+      { text: '發布 repo → staging' },
+    ] },
+    { title: '搬遷後', steps: [
+      { text: '開發者 push dev／staging' },
+      { text: '新站 GitLab：依產品線分群組', note: 'SHA 不變，子模組指標照用' },
+      { text: '112 個 webhook，打到同一個轉發器', note: '建立 0 失敗' },
+      { text: '轉發器：看 repo 網址判斷產品線，只收 dev／staging', note: '改寫成 POSIX sh，12 個情境 dry run' },
+      { text: 'Jenkins：6 個群組 job，遊戲代碼當參數', note: '86 → 6' },
+      { text: '建置腳本：帳密改讀環境變數，沒設就停', note: '不再進 log' },
+      { text: '發布 repo → staging' },
+    ] },
+  ]}
+/>
 
 - **86 個逐遊戲 job 改成 6 個群組 job**：依產品線各一個，遊戲代碼當參數。
 - **webhook 轉發重寫**：改成 POSIX sh，依 repo 網址判斷產品線（新站每個群組都叫 `cocos`，看名稱分不出來），只建置 `dev` 和 `staging` 的推送；12 個情境先 dry run 驗過。

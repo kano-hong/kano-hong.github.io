@@ -20,6 +20,7 @@ const projects = defineCollection({
     stack: z.array(z.string()),
     tags: z.array(z.string()).default([]),
     cover: z.string().optional(),
+    coverVideo: z.string().optional(),
     accent: z.string().optional(),
     featured: z.boolean().default(false),
     order: z.number().default(99),

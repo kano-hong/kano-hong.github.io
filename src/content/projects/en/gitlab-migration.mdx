@@ -14,6 +14,7 @@ tags:
   - CI/CD
   - Migration
   - Platform operations
+cover: /covers/gitlab-migration-en.jpg
 featured: true
 order: 2
 lang: en
@@ -22,6 +23,7 @@ slug: gitlab-migration
 
 import Stats from '~/components/Stats.astro';
 import MigrationWaves from '~/components/demos/MigrationWaves.astro';
+import StepFlow from '~/components/demos/StepFlow.astro';
 
 <Stats
   items={[
@@ -75,6 +77,31 @@ The entry project's build runs `git submodule update --remote`, fetching the lat
 Verification also has to point at the real source. At first I compared against my local mirror, and once a mirror had fetched only half, so next to an empty target it looked "the same". From then on, everything was compared with the old server's refs.
 
 ## Decision 4: tidy up the builds while we're at it
+
+<StepFlow
+  play="Send a push"
+  caption="The path one push takes to staging. Orange boxes mark what changed; press the button to send a push down both paths."
+  columns={[
+    { title: 'Before', steps: [
+      { text: 'Developer pushes' },
+      { text: 'Old GitLab: 4 groups, 283 repos' },
+      { text: 'One webhook per repo, all hitting the relay' },
+      { text: 'Relay triggers the game’s own job by repo name' },
+      { text: 'Jenkins: 86 jobs, one per game' },
+      { text: 'Build scripts: old-site URLs and credentials hard-coded, credentials even echoed into the log' },
+      { text: 'Publish repo → staging' },
+    ] },
+    { title: 'After', steps: [
+      { text: 'Developer pushes dev / staging' },
+      { text: 'New GitLab: groups by product line', note: 'Same SHAs, submodule pins still valid' },
+      { text: '112 webhooks, all hitting the same relay', note: '0 failures creating them' },
+      { text: 'Relay reads the repo URL for the product line, builds only dev / staging', note: 'Rewritten in POSIX sh, 12 dry-run scenarios' },
+      { text: 'Jenkins: 6 group jobs, game code as a parameter', note: '86 → 6' },
+      { text: 'Build scripts read credentials from env vars and stop if unset', note: 'No longer in the log' },
+      { text: 'Publish repo → staging' },
+    ] },
+  ]}
+/>
 
 - **86 per-game jobs became 6 group jobs**: one per product line, with the game code as a parameter.
 - **Webhook relay rewritten**: it is now POSIX sh, tells product lines apart by repo URL (every group on the new server is called `cocos`, so the name doesn't help), and only builds pushes to `dev` and `staging`. 12 scenarios were verified with a dry run first.

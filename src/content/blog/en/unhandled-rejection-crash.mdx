@@ -13,6 +13,9 @@ lang: en
 slug: unhandled-rejection-crash
 ---
 
+import CrashTimeline from '~/components/demos/CrashTimeline.astro';
+import StepFlow from '~/components/demos/StepFlow.astro';
+
 This is the technical companion to “[Real-money releases in production](/en/work/prod-canary-release/)”. The case study covers the release process; this post covers where in the code the crash came from.
 
 ## What happened: 8 servers exited within 40 ms
@@ -28,6 +31,8 @@ A Docker config change had gone in that day, so it was the first suspect. I chec
 - dockerd and containerd had restarted 0 times since boot.
 - Only the 8 game servers had restarted, once each. The other 9 containers on the same host were at 0.
 - The system journal, in millisecond order: database disconnect (.462–.470) → process exit (.485–.505) → Docker tears down the network → restart. The network change came **after** the exit; it was an effect, not the cause.
+
+<CrashTimeline lang="en" />
 
 One small trap: the host runs on UTC+8, and my first journal query in UTC looked at the wrong window.
 
@@ -76,6 +81,29 @@ We did not add a global handler. The backend owner's design is to let the proces
 
    Errors now reach the caller and the `try/catch` that was already there.
 2. **Retry when the database is down at startup.** Each attempt builds a new client, swaps it in only after it connects, closes the failed one, and waits a fixed 5 seconds. The server does not accept requests until it is connected.
+
+<StepFlow
+  play="Drop the database once"
+  caption="The same database drop, before and after the fix. Orange boxes mark the step that matters."
+  columns={[
+    { title: 'Before', steps: [
+      { text: 'find() fails: the database dropped' },
+      { text: 'The promise the executor returns is rejected' },
+      { text: 'The outer promise never settles', note: 'The caller’s try/catch sees nothing' },
+      { text: 'Node emits unhandledRejection' },
+      { text: 'glpk’s handler throws; it becomes an uncaughtException' },
+      { text: 'glpk’s handler throws again', note: 'Process exits with code 7' },
+      { text: 'Docker restarts the container', note: 'About 11 s with no service' },
+    ] },
+    { title: 'After', steps: [
+      { text: 'find() fails: the database dropped' },
+      { text: 'await hands the error back to the caller' },
+      { text: 'The existing try/catch handles it', note: 'Logs the error and the unwritten records' },
+      { text: 'The process keeps serving' },
+      { text: 'The driver reconnects when the database is back', note: '0 restarts' },
+    ] },
+  ]}
+/>
 
 ## Reproducing it locally before shipping
 

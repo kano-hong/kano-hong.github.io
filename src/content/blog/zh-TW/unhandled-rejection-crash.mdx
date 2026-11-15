@@ -13,6 +13,9 @@ lang: zh-TW
 slug: unhandled-rejection-crash
 ---
 
+import CrashTimeline from '~/components/demos/CrashTimeline.astro';
+import StepFlow from '~/components/demos/StepFlow.astro';
+
 這篇是〈[真錢遊戲的 Prod 換版](/work/prod-canary-release/)〉的技術補充：案例那篇講換版流程，這篇講崩潰的根因在程式碼的哪裡。
 
 ## 現象：40 毫秒內，8 台一起結束
@@ -28,6 +31,8 @@ slug: unhandled-rejection-crash
 - dockerd、containerd 從開機到現在重啟 0 次。
 - 只有 8 個遊戲伺服器重啟了 1 次，同一台機器上的其他 9 個容器都是 0。
 - 系統日誌照毫秒排：資料庫斷線（.462～.470）→ 行程結束（.485～.505）→ Docker 拆掉網路 → 重新啟動。網路的變化在行程結束**之後**，是結果不是原因。
+
+<CrashTimeline />
 
 有個小坑：主機的時區是 UTC+8，我第一次用 UTC 查日誌，看到的是錯的時段。
 
@@ -76,6 +81,29 @@ process.on('unhandledRejection', (e) => { throw e; });
 
    錯誤現在會回到呼叫端，由原本就在那裡的 `try/catch` 處理。
 2. **啟動時連不上資料庫就重試。** 每次建立新的 client，連上之後才換上去，失敗的那個關掉，固定等 5 秒再試；伺服器在連上之前不開始接請求。
+
+<StepFlow
+  play="讓資料庫斷一次"
+  caption="同一次資料庫斷線，修正前後各自怎麼走。橘框是關鍵的那一步。"
+  columns={[
+    { title: '修正前', steps: [
+      { text: 'find() 失敗：資料庫斷線' },
+      { text: 'executor 自己回傳的 promise 變成 rejected' },
+      { text: '外層 promise 永遠等不到結果', note: '呼叫端的 try/catch 收不到' },
+      { text: 'Node 發出 unhandledRejection' },
+      { text: 'glpk 的處理器丟出例外，變成 uncaughtException' },
+      { text: 'glpk 的處理器再丟一次', note: '行程以 exit code 7 結束' },
+      { text: 'Docker 重啟容器', note: '約 11 秒沒有服務' },
+    ] },
+    { title: '修正後', steps: [
+      { text: 'find() 失敗：資料庫斷線' },
+      { text: 'await 把錯誤丟回呼叫端' },
+      { text: '原本就在的 try/catch 接住', note: '記下錯誤和沒寫進去的紀錄' },
+      { text: '行程繼續服務' },
+      { text: '資料庫回來後，driver 自己重連', note: '0 次重啟' },
+    ] },
+  ]}
+/>
 
 ## 上線前先在本機重現
 
