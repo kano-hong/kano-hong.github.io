@@ -99,6 +99,12 @@ Cocos Creator 是桌面程式，AI 原本碰不到裡面的場景和 prefab，�
 
 外加兩輪 code review 的 13 項修正，以及 104 項離線測試。測試寫完我會把每個修正逐一改回舊行為，確認測試真的會失敗。最後和 cocos-mcp 串起來，Figma 稿可以兩段式自動轉成 prefab。
 
+<Video
+  src="/videos/figma-to-cocos.mp4"
+  poster="/videos/figma-to-cocos.jpg"
+  caption="實錄（等待 Figma API 的那段加速 6 倍）：AI 透過 cocos-mcp 操作 figma-to-cocos 面板，貼上 Figma 連結 → 解析 → 自動找到 35 張圖、下載、轉換 → 生成到場景，整頁設計稿變成 Cocos 節點。錄完已刪掉產生的節點與圖片，沒有存檔。"
+/>
+
 ## 決策 4：平行 agent 要控制額度
 
 寫 46 份規格書時，我一次開了兩個工作流、共 106 個 agent 平行跑，一小時就撞到額度上限，50 多個 agent 一起失敗。額度是整個 session 共用的滾動視窗，撞到時不是變慢，而是整批失敗。
