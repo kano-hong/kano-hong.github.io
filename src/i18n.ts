@@ -25,7 +25,7 @@ export const ui = {
     'hero.title.tags': '11 年｜H5 效能與架構｜帶過 10 人團隊',
     'hero.motto': '為遊戲寫一行行結構與秩序。',
     'hero.subtitle':
-      '2020～2026 年擔任遊戲客戶端 Lead。專注於 Cocos Creator、TypeScript、狀態機架構，以及把混亂的開發流程改造成可重複的系統。',
+      '帶遊戲客戶端團隊 6 年。專注於 Cocos Creator、TypeScript、狀態機架構，以及把混亂的開發流程改造成可重複的系統。',
     'hero.cta.work': '看作品',
     'hero.cta.writing': '看文章',
 
@@ -75,7 +75,7 @@ export const ui = {
     'hero.title.tags': 'Cocos Creator · 11 yrs · H5 performance & architecture',
     'hero.motto': 'I bring structure and order to game code.',
     'hero.subtitle':
-      'Led game client teams from 2020 to 2026. Focused on Cocos Creator, TypeScript, state-machine architecture, and turning messy development pipelines into repeatable systems.',
+      '6 years leading game client teams. Focused on Cocos Creator, TypeScript, state-machine architecture, and turning messy development pipelines into repeatable systems.',
     'hero.cta.work': 'See work',
     'hero.cta.writing': 'Read writing',
 

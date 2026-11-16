@@ -41,7 +41,7 @@ a{color:#1f2328}a:hover{color:#57606a}
 <h4 style="margin: 2px 0 0; font-size: 12.5px; line-height: 1.5; font-weight: 700; color: #57606a">Client architecture &amp; performance</h4>
 <ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; line-height: 1.45; color: #32383f">
 <li><strong style="color: #1f2328">GPU texture memory −92% (492→40 MB)</strong>: brought Basis Universal / XUASTC compression into CI, and fixed the memory leak that made iPhones lose their WebGL context.</li>
-<li><strong style="color: #1f2328">First visit 65→14 MB (−78%), first-visit blank wait 2,101→46 ms</strong>: stopped precaching the game bundle in the service worker and deferred its registration, subset the fonts (10→2.6 MB), and switched Protobuf to reflection-based code (7.9 MB→232 KB).</li>
+<li><strong style="color: #1f2328">First visit 65→14 MB (−79%), first-visit blank wait 2,101→46 ms</strong>: stopped precaching the game bundle in the service worker and deferred its registration, subset the fonts (10→2.6 MB), and switched Protobuf to reflection-based code (7.9 MB→232 KB).</li>
 <li><strong style="color: #1f2328">New game modes reached UAT in about 3 weeks</strong>: designed hierarchical XState machines and a sub-game registry, so web / PWA, native apps and the Telegram Mini App share one WebSocket / Protobuf layer.</li>
 </ul>
 

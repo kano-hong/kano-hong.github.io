@@ -23,6 +23,8 @@ const localTime = now.toLocaleString(lang === 'zh-TW' ? 'zh-TW' : 'en-US', {
   month: 'short',
   day: 'numeric',
 });
+// 中文 tags 以｜分段、每段不斷行（避免「帶過 10 人團隊」被拆開）；英文沒有｜，照常換行
+const tags = t('hero.title.tags').split('｜');
 ---
 
 <section class="hero">
@@ -31,7 +33,7 @@ const localTime = now.toLocaleString(lang === 'zh-TW' ? 'zh-TW' : 'en-US', {
 
     <h1 class="hero-title">
       <span class="hero-role rise delay-1">{t('hero.title.role')}</span>
-      <span class="hero-tags rise delay-2"><span class="vh">{sep}</span>{t('hero.title.tags')}</span>
+      <span class="hero-tags rise delay-2"><span class="vh">{sep}</span>{tags.length > 1 ? tags.map((s, i) => <>{i > 0 && '｜'}<span class="nw">{s}</span></>) : tags[0]}</span>
     </h1>
 
     <p class="hero-motto serif-italic rise delay-3">{t('hero.motto')}</p>
@@ -137,6 +139,8 @@ const localTime = now.toLocaleString(lang === 'zh-TW' ? 'zh-TW' : 'en-US', {
     letter-spacing: -0.01em;
     color: var(--accent);
   }
+
+  .nw { white-space: nowrap; }
 
   .vh {
     position: absolute;
