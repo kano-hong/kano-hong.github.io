@@ -79,10 +79,10 @@ Every rule change is verified twice. All 49 tests must pass, and then all 14,693
 
 Once I've done something a second time, I write it up as a skill: instructions written for the AI, plus the scripts it needs. Next time I just say "ship to prod" or "build everything once", and it follows the same steps, with the reason for each step written in.
 
-- **Production releases**: pack locally, build the image offline on the production machine, compare effective settings, swap 1 server and then the other 7, and run a one-hour check (see "[Real-money releases in production](../prod-canary-release/)").
+- **Production releases**: pack locally, build the image offline on the production machine, compare effective settings, swap 1 server and then the other 7, and run a one-hour check (see "[Game server releases in production](../prod-canary-release/)").
 - **Building every game**: trigger every game on three product lines, throttled, and sort failures by type.
 - **Deployment docs sync**: whenever the deployment state changes, update the docs and push them.
-- **Read-only lookups**: production bet records and errors in the Lark alert channel, read only, never written.
+- **Read-only lookups**: production game records and errors in the Lark alert channel, read only, never written.
 - **On-device debugging**: drive Safari on a USB-connected iPhone from the command line and measure what is really on screen and in memory.
 
 Tuning a skill's trigger description had its own trap. The evaluation tool runs test prompts with full permissions, so a prompt like "ship to prod" could really connect to the production machine during an eval. I restricted the eval subprocesses to reading files and calling skills.

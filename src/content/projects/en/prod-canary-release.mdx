@@ -1,6 +1,6 @@
 ---
-title: 'Real-money releases in production: an 8-server canary and zero 5xx after each release'
-summary: A slot platform's Node.js game servers, 8 of them in production, handling real players' bets. I turned releases into a repeatable canary process (5 releases, 0 5xx after each) and fixed the bug that made all 8 crash together whenever the database dropped.
+title: 'Game server releases in production: an 8-server canary and zero 5xx after each release'
+summary: A slot platform's Node.js game servers, 8 of them in production, serving real players. I turned releases into a repeatable canary process (5 releases, 0 5xx after each) and fixed the bug that made all 8 crash together whenever the database dropped.
 year: '2026'
 role: Game Client Tech Lead (also running production ops)
 company: Newdigit Co., Ltd. (XGaming)
@@ -53,9 +53,9 @@ import Video from '~/components/Video.astro';
 
 ## The problem
 
-In October 2026 this slot platform's game servers moved from K8s to a single Docker host: 8 game-server containers on one production machine, with every spin touching a player's wallet. When I took over operations there were two problems:
+In October 2026 this slot platform's game servers moved from K8s to a single Docker host: 8 game-server containers on one production machine. When I took over operations there were two problems:
 
-- **No set way to release.** Every release was a real-money change, without a procedure that could be repeated and verified.
+- **No set way to release.** Every release went straight to live players, without a procedure that could be repeated and verified.
 - **When the database dropped, all 8 crashed.** The database dropped twice in late October, and both times the servers crashed. On October 30 all 8 containers exited within 40 ms of the disconnect and restarted, and bets in flight got no response.
 
 ## My role
@@ -97,6 +97,6 @@ A week after the fix went live, the database dropped again. This time: **0 resta
 
 ## What I learned
 
-- **With real money, every step must be able to turn back.** Building offline, comparing settings and swapping one server first are all there to stop before something breaks, not to roll back after it does.
+- **In production, every step must be able to turn back.** Building offline, comparing settings and swapping one server first are all there to stop before something breaks, not to roll back after it does.
 - **When all 8 die together, suspect what they share.** Ending within a few dozen milliseconds of each other is unlikely to be 8 independent bugs. Sort the events by time once and you see who moved first.
 - **Alerts must be explicit.** A restart buried in a summary is no alert at all.
